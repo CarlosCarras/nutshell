@@ -6,13 +6,17 @@
 void yyerror(char *);
 %}
 
-word            [^ \\<>|\="&\t\n]+|(\"[^"\\]*(?:\\.[^"\\]*)*\")
+word            [^ \\<>|\="&\~\.\t\n]+|(\"[^"\\]*(?:\\.[^"\\]*)*\")
 metacharacter   [\\<>|"&]
 whitespace      [ \t\n]+
+dot             [\.]
+tilde           [\~]
 
 %%
 
 {word}          {yylval.string=strdup(yytext); return WORD;}
+{dot}           {return DOT;}
+{tilde}         {return TILDE;}
 {metacharacter} {return (int)yytext[0];}
 {whitespace}    {;}
 .               {return UNDEFINED;}
