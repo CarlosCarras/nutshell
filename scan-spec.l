@@ -1,20 +1,21 @@
 %{
 #include <stdio.h>
+#include <string.h>
 #include "parse-spec.tab.h"
 
 void yyerror(char *);
 %}
 
-word            [^ \\\<\>\|\"\&\t\n]+|\"[^\"]*\"
-metacharacter   [\\\<\>\|\"\&]
+word            [^ \\<>|\="&\t\n]+|(\"[^"\\]*(?:\\.[^"\\]*)*\")
+metacharacter   [\\<>|"&]
 whitespace      [ \t\n]+
 
 %%
 
-{word}          {printf("Word: %s\n", yytext); yylval = *yytext; return WORD;}
-{metacharacter} {printf("Metacharacter: %s\n", yytext); return *yytext;}
-{whitespace}    ;
-.               yyerror("Unknown character");
+{word}          {yylval.string=strdup(yytext); return WORD;}
+{metacharacter} {return (int)yytext[0];}
+{whitespace}    {;}
+.               {return UNDEFINED;}
 
 %%
 
