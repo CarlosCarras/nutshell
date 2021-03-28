@@ -1,4 +1,4 @@
 *.o
 *.yy.c
 *.tab.*
-*.vscode
+.vscode
