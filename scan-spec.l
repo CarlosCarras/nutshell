@@ -4,20 +4,40 @@
 #include "parse-spec.tab.h"
 
 void yyerror(char *);
+
+char buf[100];
+char *s;
 %}
 
-word            [^ \\<>|\="&\~\.\t\n]+|(\"[^"\\]*(?:\\.[^"\\]*)*\")
-metacharacter   [\\<>|"&]
+%x STRING
+
+quote           ["]
+notquote        [^"]
+
+word            [^ \\<>|="&~.\t\n]+
+metachar        [\\<>|"&]
 whitespace      [ \t\n]+
 dot             [\.]
 tilde           [\~]
 
 %%
 
+^cd             {return CD;}
+^bye            {return BYE;}
+^pwd            {return PWD;}
+
+{quote}		    {BEGIN STRING; s = buf;};
+<STRING>\\n     {*s++ = '\n';}
+<STRING>\\t     {*s++ = '\t';}
+<STRING>\\\"    {*s++ = '\"';}
+<STRING>\"      {*s = 0; BEGIN INITIAL;}
+<STRING>\n      {printf("invalid string"); exit(1);}
+<STRING>.       {*s++ = *yytext; return WORD;}
+
 {word}          {yylval.string=strdup(yytext); return WORD;}
+{metachar}      {return (int)yytext[0];}
 {dot}           {return DOT;}
 {tilde}         {return TILDE;}
-{metacharacter} {return (int)yytext[0];}
 {whitespace}    {;}
 .               {return UNDEFINED;}
 

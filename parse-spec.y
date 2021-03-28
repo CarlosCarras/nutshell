@@ -2,6 +2,7 @@
     #include <stdlib.h>
 	#include <stdio.h>
     #include <string.h>
+    #include "nutshell_cmds.h"
     
 	int yylex(void);
 
@@ -13,25 +14,24 @@
     char* string;
 }
 
+%token CD BYE PWD
 
-%token <string> WORD
+%token<string> WORD
 %token DOT TILDE
 %token UNDEFINED
 
+%type<string> command
+
 %%
 
-input: 
-    | input WORD		{printf("\tWORD: %s\n", $2);}
-    | input DOT	DOT	    {printf("\tCHAR: ..\n");}
-    | input DOT		    {printf("\tCHAR: .\n");}
-    | input TILDE		{printf("\tCHAR: ~\n");}
-    | input '&'         {printf("\tMETACHAR: &\n");}
-    | input '\\'        {printf("\tMETACHAR: \\\n");}
-    | input '<'         {printf("\tMETACHAR: <\n");}
-    | input '>'         {printf("\tMETACHAR: >\n");}
-    | input '"'         {printf("\tMETACHAR: \"\n");}
+command: /* empty */    
+    | CD WORD WORD      {cd_cmd();} 
+    | CD                {cd_home();}  
+    | PWD               {pwd_cmd();} 
+    | BYE               {bye_cmd();} 
     | UNDEFINED         {printf("\tUndefined Character.\n");}
-    
+    ;
+
 %%
 
 void yyerror(char *s) {
