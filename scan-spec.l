@@ -14,7 +14,7 @@ char *s;
 quote           ["]
 notquote        [^"]
 
-word            [^ \\<>|="&~.\t\n]+
+word            [^ \\<>|="&\t\n]+
 metachar        [\\<>|"&]
 whitespace      [ \t\n]+
 dot             [\.]
@@ -25,6 +25,7 @@ tilde           [\~]
 ^cd             {return CD;}
 ^bye            {return BYE;}
 ^pwd            {return PWD;}
+^setenv         {return SETENV;}
 
 {quote}		    {BEGIN STRING; s = buf;};
 <STRING>\\n     {*s++ = '\n';}
@@ -36,8 +37,6 @@ tilde           [\~]
 
 {word}          {yylval.string=strdup(yytext); return WORD;}
 {metachar}      {return (int)yytext[0];}
-{dot}           {return DOT;}
-{tilde}         {return TILDE;}
 {whitespace}    {;}
 .               {return UNDEFINED;}
 

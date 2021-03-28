@@ -23,10 +23,9 @@
     char* string;
 }
 
-%token CD BYE PWD
+%token CD BYE PWD SETENV
 
 %token<string> WORD
-%token DOT TILDE
 %token UNDEFINED
 
 %type<string> input command
@@ -37,8 +36,9 @@ input: command
     ;
 
 command:
-      CD WORD           {cd_cmd();} 
-    | CD                {cd_home();}  
+      CD                {cd_home();}    /* for some reason this path is never taken */
+    | CD WORD           {cd_cmd($2);}  
+    | SETENV WORD WORD  {setenv_cmd($2, $3);}
     | PWD               {pwd_cmd();} 
     | BYE               {bye_cmd();} 
     | UNDEFINED         {printf("\tUndefined Character.\n");}
