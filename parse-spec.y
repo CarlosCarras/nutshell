@@ -7,6 +7,15 @@
 	int yylex(void);
 
     void yyerror(char*);
+
+    struct cmd_tbl {
+        char* command;
+        char* option, option2; 
+        char* arguements; 
+        char* stdin;
+        char* stdout;
+        char* stderr;
+    };
 %}
 
 %union 
@@ -20,12 +29,15 @@
 %token DOT TILDE
 %token UNDEFINED
 
-%type<string> command
+%type<string> input command
 
 %%
 
-command: /* empty */    
-    | CD WORD WORD      {cd_cmd();} 
+input: command
+    ;
+
+command:
+      CD WORD           {cd_cmd();} 
     | CD                {cd_home();}  
     | PWD               {pwd_cmd();} 
     | BYE               {bye_cmd();} 

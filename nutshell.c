@@ -3,6 +3,7 @@
 
 int main(void) {
     while(1) {
+        printf(">> ");
         yyparse();
     }
     return 0;
