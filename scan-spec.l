@@ -16,6 +16,7 @@ notquote        [^"]
 
 word            [^ \\<>|="&\t\n]+
 metachar        [\\<>|"&]
+newline         [\n]
 whitespace      [ \t\n]+
 dot             [\.]
 tilde           [\~]
@@ -36,6 +37,7 @@ tilde           [\~]
 <STRING>.       {*s++ = *yytext; return WORD;}
 
 {word}          {yylval.string=strdup(yytext); return WORD;}
+{newline}       {return NEWLINE;}
 {metachar}      {return (int)yytext[0];}
 {whitespace}    {;}
 .               {return INVALID;}

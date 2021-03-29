@@ -19,6 +19,8 @@
     };
 %}
 
+%start input
+
 %union 
 {
     char* string;
@@ -27,27 +29,25 @@
 %token CD BYE PWD SETENV
 
 %token<string> WORD
-%token INVALID
-
-%type<string> input command envvar
+%token NEWLINE INVALID
 
 %%
 
-input: command
-    ;
+input: 
+    command NEWLINE
 
 command:
-      CD                {cd_home();}    /* for some reason this path is never taken */
-    | CD WORD           {cd_cmd($2);}  
+      CD                {cd_home(); return 1;}    /* for some reason this path is never taken */
+    | CD WORD           {cd_cmd($2); return 1;}  
     | SETENV WORD WORD  {setenv_cmd($2, $3);}
-    | '$' envvar        {envexp_cmd($2);} 
-    | PWD               {pwd_cmd();} 
+    //| '$' envvar        {envexp_cmd($2);} 
+    | PWD               {pwd_cmd(); return 1;} 
     | BYE               {bye_cmd();} 
     | WORD              {printf("error: command not found.\n");}
-    | INVALID           {printf("error: invalid areguements.\n");}
+    | INVALID           {printf("error: invalid arguements.\n");}
     ;
 
-envvar: '{' WORD '}'    {$$ = $2;}
+//envvar: '{' WORD '}'    {$$ = $2;}
 
 %%
 

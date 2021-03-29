@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#define ENV_HOME getenv("HOME")
+
 void printerr();
 
 void cd_home();

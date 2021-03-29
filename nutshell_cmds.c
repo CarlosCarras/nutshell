@@ -5,8 +5,7 @@
 #include "nutshell_cmds.h"
 
 void cd_home() {
-    char* dest = getenv("HOME");
-    cd_cmd(dest);
+    cd_cmd(ENV_HOME);
 }
 
 void cd_cmd(const char* dest) {
