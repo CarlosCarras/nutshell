@@ -15,6 +15,7 @@
         char* stdin;
         char* stdout;
         char* stderr;
+        int background;
     };
 %}
 
@@ -41,7 +42,8 @@ command:
     | SETENV WORD WORD  {setenv_cmd($2, $3);}
     | PWD               {pwd_cmd();} 
     | BYE               {bye_cmd();} 
-    | UNDEFINED         {printf("\tUndefined Character.\n");}
+    | WORD              {printf("\terror: command not found.\n");}
+    | UNDEFINED         {printf("\terror: undefined character.\n");}
     ;
 
 %%

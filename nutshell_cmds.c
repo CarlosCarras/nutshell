@@ -39,17 +39,17 @@ void setenv_cmd(const char* var, const char* val) {
 void printerr() {
     char err_str;
 
-    printf("error: ");
+    printf("\terror: ");
 
     switch(errno) {
-        /* chdir */
-        case EACCES      : printf("Search permission is denied for one of the components of path.\n"); break;
-        case EFAULT      : printf("Path points outside your accessible address space.\n"); break;
-        case EIO         : printf("An I/O error occurred.\n"); break;
-        case ELOOP       : printf("Too many symbolic links were encountered in resolving path.\n"); break;
+        /* chdir, putenv */
+        case EACCES      : printf("search permission is denied for one of the components of path.\n"); break;
+        case EFAULT      : printf("path points outside your accessible address space.\n"); break;
+        case EIO         : printf("an I/O error occurred.\n"); break;
+        case ELOOP       : printf("too many symbolic links were encountered in resolving path.\n"); break;
         case ENAMETOOLONG: printf("path is too long.\n"); break;
-        case ENOENT      : printf("The directory specified in path does not exist.\n"); break;
-        case ENOMEM      : printf("Insufficient kernel memory was available.\n"); break;
-        case ENOTDIR     : printf("A component of path is not a directory.\n"); break;
+        case ENOENT      : printf("the directory specified in path does not exist.\n"); break;
+        case ENOMEM      : printf("insufficient kernel memory was available.\n"); break;
+        case ENOTDIR     : printf("q component of path is not a directory.\n"); break;
     }
 }
