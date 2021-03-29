@@ -36,10 +36,15 @@ void setenv_cmd(const char* var, const char* val) {
     if (status < 0) printerr();
 }
 
+void envexp_cmd(const char* var) {
+    char* val = getenv(var);
+    printf("%s\n", var);
+}
+
 void printerr() {
     char err_str;
 
-    printf("\terror: ");
+    printf("error: ");
 
     switch(errno) {
         /* chdir, putenv */

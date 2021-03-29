@@ -32,13 +32,13 @@ tilde           [\~]
 <STRING>\\t     {*s++ = '\t';}
 <STRING>\\\"    {*s++ = '\"';}
 <STRING>\"      {*s = 0; BEGIN INITIAL;}
-<STRING>\n      {printf("invalid string"); exit(1);}
+<STRING>\n      {return INVALID;}
 <STRING>.       {*s++ = *yytext; return WORD;}
 
 {word}          {yylval.string=strdup(yytext); return WORD;}
 {metachar}      {return (int)yytext[0];}
 {whitespace}    {;}
-.               {return UNDEFINED;}
+.               {return INVALID;}
 
 %%
 

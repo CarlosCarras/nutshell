@@ -12,5 +12,6 @@ void cd_cmd(const char* dest);
 void pwd_cmd();
 void bye_cmd();
 void setenv_cmd(const char* var, const char* val);
+void envexp_cmd(const char* var);
 
 #endif // NUTSHELL_CMDS_H

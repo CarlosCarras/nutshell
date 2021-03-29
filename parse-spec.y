@@ -27,9 +27,9 @@
 %token CD BYE PWD SETENV
 
 %token<string> WORD
-%token UNDEFINED
+%token INVALID
 
-%type<string> input command
+%type<string> input command envvar
 
 %%
 
@@ -40,11 +40,14 @@ command:
       CD                {cd_home();}    /* for some reason this path is never taken */
     | CD WORD           {cd_cmd($2);}  
     | SETENV WORD WORD  {setenv_cmd($2, $3);}
+    | '$' envvar        {envexp_cmd($2);} 
     | PWD               {pwd_cmd();} 
     | BYE               {bye_cmd();} 
-    | WORD              {printf("\terror: command not found.\n");}
-    | UNDEFINED         {printf("\terror: undefined character.\n");}
+    | WORD              {printf("error: command not found.\n");}
+    | INVALID           {printf("error: invalid areguements.\n");}
     ;
+
+envvar: '{' WORD '}'    {$$ = $2;}
 
 %%
 
