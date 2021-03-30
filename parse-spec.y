@@ -7,16 +7,6 @@
 	int yylex(void);
 
     void yyerror(char*);
-
-    struct cmd_tbl {
-        char* command;
-        char* option, option2; 
-        char* arguements; 
-        char* stdin;
-        char* stdout;
-        char* stderr;
-        int background;
-    };
 %}
 
 %start input
@@ -34,8 +24,12 @@
 %%
 
 input: 
-    command NEWLINE
+    line NEWLINE
 
+line:
+    WORD                {buildtable($1, "\0", "\0", "\0", "\0", "\0", 0); return 1;}
+    ;
+    
 command:
       CD                {cd_home(); return 1;}    /* for some reason this path is never taken */
     | CD WORD           {cd_cmd($2); return 1;}  

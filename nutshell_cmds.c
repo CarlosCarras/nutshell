@@ -57,3 +57,26 @@ void printerr() {
         case ENOTDIR     : printf("q component of path is not a directory.\n"); break;
     }
 }
+
+/************************* Data Handling ***********************/
+
+struct cmd_tbl buildtable(char* command, 
+                          char* options, 
+                          char* arguements,  
+                          char* standarddin,
+                          char* stdandardout,
+                          char* stdandarderr,
+                          int background
+) {
+    struct cmd_tbl cmd;
+
+    cmd.command = command;
+    cmd.options = options;
+    cmd.arguements = arguements;
+    cmd.standardin = standarddin;
+    cmd.standardout = stdandardout;
+    cmd.standarderr = stdandarderr;
+    cmd.background = background;
+
+    return cmd;
+}
