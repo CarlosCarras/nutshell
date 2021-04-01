@@ -1,43 +1,30 @@
-
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "nutshell_cmds.h"
+#include <errno.h>
+#include "nutshell_lib.h"
 
-void cd_home() {
-    cd_cmd(ENV_HOME);
+char* subAliases(char* name) {
+    for (int i = 0; i < aliasIndex; i++) {
+        if(strcmp(aliasTable.name[i], name) == 0) {
+            return aliasTable.word[i];
+        }
+    }
+    return name;
 }
 
-void cd_cmd(const char* dest) {
-    int status = chdir(dest);
-    if (status < 0) printerr();
+int isAlias(char* name) {
+    for (int i = 0; i < aliasIndex; i++) {
+        if(strcmp(aliasTable.name[i], name) == 0) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
-void pwd_cmd() {
-    char cwd[1024];
-    getcwd(cwd, sizeof(cwd));
-    printf("  %s\n", cwd);
-}
-
-void bye_cmd() {
-    exit(0);
-}
-
-void setenv_cmd(const char* var, const char* val) {
-    int status;
-    char str[128];
-
-    strcpy(str, var);
-    strcat(str, "=");
-    strcat(str, val);
-
-    status = putenv(str);
-    if (status < 0) printerr();
-}
-
-void envexp_cmd(const char* var) {
-    char* val = getenv(var);
-    printf("%s\n", var);
+void printd(const char* desc, const char* val) {
+    if (DEBUG) {
+        printf("DEBUG: %s %s\n", desc, val);
+    }
 }
 
 void printerr() {
@@ -58,17 +45,15 @@ void printerr() {
     }
 }
 
-/************************* Data Handling ***********************/
-
-struct cmd_tbl buildtable(char* command, 
-                          char* options, 
-                          char* arguements,  
-                          char* standarddin,
-                          char* stdandardout,
-                          char* stdandarderr,
-                          int background
+struct cmdTable buildTable(char* command, 
+                           char* options, 
+                           char* arguements,  
+                           char* standarddin,
+                           char* stdandardout,
+                           char* stdandarderr,
+                           int background
 ) {
-    struct cmd_tbl cmd;
+    struct cmdTable cmd;
 
     cmd.command = command;
     cmd.options = options;
