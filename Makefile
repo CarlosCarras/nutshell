@@ -3,7 +3,7 @@
 CC=/usr/bin/cc
 CFLAGS=#-Wall
 
-all:  flex-config bison-config parse-spec scan-spec nutshell nutshell_cmds nutshell-out
+all:  flex-config bison-config parse-spec scan-spec nutshell commands nutshell_lib nutshell-out
 
 flex-config:
 	flex scan-spec.l
@@ -19,14 +19,17 @@ parse-spec:  parse-spec.tab.c
 	$(CC) $(CFLAGS) -c parse-spec.tab.c -o parse-spec.y.o
 
 
-nutshell_cmds:  nutshell_cmds.h nutshell_cmds.c
-	$(CC) $(CFLAGS) -g -c nutshell_cmds.c -o nutshell_cmds.o
+commands:  commands.h commands.c
+	$(CC) $(CFLAGS) -g -c commands.c -o commands.o
+
+nutshell_lib:  nutshell_lib.h nutshell_lib.c
+	$(CC) $(CFLAGS) -g -c nutshell_lib.c -o nutshell_lib.o
 
 nutshell:  nutshell.c
 	$(CC) $(CFLAGS) -g -c nutshell.c -o nutshell.o 
 
 nutshell-out: 
-	$(CC) $(CFLAGS) -o nutshell nutshell_cmds.o nutshell.o scan-spec.lex.o parse-spec.y.o -ll -lm -lfl
+	$(CC) $(CFLAGS) -o nutshell nutshell_lib.o commands.o nutshell.o scan-spec.lex.o parse-spec.y.o -ll -lm -lfl
 
 clean: 
 	rm -rf *.o *.yy.c *.tab.*

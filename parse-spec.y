@@ -2,21 +2,12 @@
     #include <stdlib.h>
 	#include <stdio.h>
     #include <string.h>
-    #include "nutshell_cmds.h"
+    #include "commands.h"
+    #include "nutshell_lib.h"
     
 	int yylex(void);
 
     void yyerror(char*);
-
-    struct cmd_tbl {
-        char* command;
-        char* option, option2; 
-        char* arguements; 
-        char* stdin;
-        char* stdout;
-        char* stderr;
-        int background;
-    };
 %}
 
 %start input
@@ -26,7 +17,7 @@
     char* string;
 }
 
-%token CD BYE PWD SETENV
+%token CD BYE PWD SETENV ALIAS ECHO_CMD
 
 %token<string> WORD
 %token NEWLINE INVALID
@@ -34,20 +25,18 @@
 %%
 
 input: 
-    command NEWLINE
+    line NEWLINE
 
-command:
-      CD                {cd_home(); return 1;}    /* for some reason this path is never taken */
-    | CD WORD           {cd_cmd($2); return 1;}  
+line: CD                {cd_home();}
+    | CD WORD           {cd_cmd($2);} 
     | SETENV WORD WORD  {setenv_cmd($2, $3);}
-    //| '$' envvar        {envexp_cmd($2);} 
-    | PWD               {pwd_cmd(); return 1;} 
+    | PWD               {pwd_cmd();} 
     | BYE               {bye_cmd();} 
-    | WORD              {printf("error: command not found.\n");}
+    | ALIAS WORD WORD   {setalias_cmd($2, $3);}
+    | ECHO_CMD WORD     {echo_cmd($2);}
+    | WORD              {buildTable($1, "\0", "\0", "\0", "\0", "\0", 0);}
     | INVALID           {printf("error: invalid arguements.\n");}
     ;
-
-//envvar: '{' WORD '}'    {$$ = $2;}
 
 %%
 
