@@ -25,7 +25,8 @@
 %%
 
 input: 
-    line NEWLINE
+      line NEWLINE      {return 1;}
+    |                   {printf("error: unknown command.\n"); return 1;}
 
 line: CD                {cd_home();}
     | CD WORD           {cd_cmd($2);} 
@@ -34,8 +35,8 @@ line: CD                {cd_home();}
     | BYE               {bye_cmd();} 
     | ALIAS WORD WORD   {setalias_cmd($2, $3);}
     | ECHO_CMD WORD     {echo_cmd($2);}
-    | WORD              {buildTable($1, "\0", "\0", "\0", "\0", "\0", 0);}
     | INVALID           {printf("error: invalid arguements.\n");}
+    |                   {return 1;}
     ;
 
 %%

@@ -17,7 +17,6 @@ int main(void) {
 
     while(1) {
         getcwd(cwd, sizeof(cwd));
-
         printf(BLUE "nutshell");
         printf(WHITE ":");
         printf(GREEN "%s", cwd);
