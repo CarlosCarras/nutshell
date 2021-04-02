@@ -41,25 +41,25 @@ void envexp_cmd(const char* var) {
     printf("%s\n", var);
 }
 
-void setalias_cmd(const char* name, const char* val) {
+void setalias_cmd(const char* name, const char* word) {
     for (int i = 0; i < aliasIndex; i++) {
-		if(strcmp(name, val) == 0){
+		if(strcmp(name, word) == 0) {
 			printf("Error, expansion of \"%s\" would create a loop.\n", name);
 			return;
-		} else if((strcmp(aliasTable.name[i], name) == 0) && (strcmp(aliasTable.word[i], val) == 0)) {
+		} else if((strcmp(aliasTable.name[i], name) == 0) && (strcmp(aliasTable.word[i], word) == 0)) {
 			printf("Error, expansion of \"%s\" would create a loop.\n", name);
 			return;
 		} else if(strcmp(aliasTable.name[i], name) == 0) {
-			strcpy(aliasTable.word[i], val);
+			strcpy(aliasTable.word[i], word);
 			return;;
 		}
 	}
 	strcpy(aliasTable.name[aliasIndex], name);
-	strcpy(aliasTable.word[aliasIndex], val);
+	strcpy(aliasTable.word[aliasIndex], word);
 	aliasIndex++;
 
     printd("New Alias Name> ", name);
-    printd("New Alias Val> ", val);
+    printd("New Alias Val> ", word);
 }
 
 void echo_cmd(const char* val) {
