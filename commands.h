@@ -9,10 +9,18 @@
 void cd_home();
 void cd_cmd(const char* dest);
 void pwd_cmd();
-void bye_cmd();
-void setenv_cmd(const char* var, const char* val);
-void envexp_cmd(const char* var);
-void setalias_cmd(const char* name, const char* val);
 void echo_cmd(const char* val);
+void bye_cmd();
+
+/********************* Environment Variables *********************/
+void envexp_cmd(const char* var);
+void setenv_cmd(const char* var, const char* val);
+void unsetenv_cmd(const char* var);
+void printenv_cmd();
+
+/***************************** Alias *****************************/
+void setalias_cmd(const char* name, const char* val);
+void unalias_cmd(const char* name);
+void printalias_cmd();
 
 #endif // NUTSHELL_CMDS_H

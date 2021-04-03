@@ -17,26 +17,31 @@
     char* string;
 }
 
-%token CD BYE PWD SETENV ALIAS ECHO_CMD
+%token CD BYE PWD SETENV UNSETENV PRINTENV ALIAS UNALIAS PRINTALIAS INVALIDALIAS ECHO_CMD
 
 %token<string> WORD
-%token NEWLINE INVALID
+%token END INVALID
 
 %%
 
-input: 
-      line NEWLINE      {return 1;}
-    |                   {printf("error: unknown command.\n"); return 1;}
+input:
+      line END          {return 1;}
+    ;
 
 line: CD                {cd_home();}
     | CD WORD           {cd_cmd($2);} 
-    | SETENV WORD WORD  {setenv_cmd($2, $3);}
     | PWD               {pwd_cmd();} 
-    | BYE               {bye_cmd();} 
-    | ALIAS WORD WORD   {setalias_cmd($2, $3);}
     | ECHO_CMD WORD     {echo_cmd($2);}
+    | BYE               {bye_cmd();} 
+    | SETENV WORD WORD  {setenv_cmd($2, $3);}
+    | UNSETENV WORD     {unsetenv_cmd($2);}
+    | PRINTENV          {printenv_cmd();}
+    | ALIAS WORD WORD   {setalias_cmd($2, $3);}
+    | UNALIAS WORD      {unalias_cmd($2);}
+    | PRINTALIAS        {printalias_cmd();}
     | INVALID           {printf("error: invalid arguements.\n");}
-    |                   {return 1;}
+    | INVALIDALIAS      {printf("error: invalid alias name.\n");}
+    |                   {printf("error: unknown command.\n"); return 1;}
     ;
 
 %%

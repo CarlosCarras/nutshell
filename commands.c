@@ -17,43 +17,84 @@ void cd_cmd(const char* dest) {
 void pwd_cmd() {
     char cwd[1024];
     getcwd(cwd, sizeof(cwd));
-    printf("  %s\n", cwd);
+    printf("%s\n", cwd);
+}
+
+void echo_cmd(const char* val) {
+    printf("%s\n", val);
 }
 
 void bye_cmd() {
     exit(0);
 }
 
-void setenv_cmd(const char* var, const char* val) {
-    int status;
-    char str[128];
-
-    strcpy(str, var);
-    strcat(str, "=");
-    strcat(str, val);
-
-    status = putenv(str);
-    if (status < 0) printerr();
-}
+/********************* Environment Variables *********************/
 
 void envexp_cmd(const char* var) {
     char* val = getenv(var);
     printf("%s\n", var);
 }
 
+void setenv_cmd(const char* var, const char* word) {
+    for (int i = 0; i < varIndex; i++) {
+		if(strcmp(var, word) == 0) {
+            /* if variable == word */
+			printf("error: setting variable \"%s\" would create a loop.\n", var);
+			return;
+		} else if((strcmp(varTable.var[i], var) == 0) && (strcmp(varTable.word[i], word) == 0)) {
+		    /* if both the variable and the word already exist */
+			return;
+		} else if(strcmp(varTable.var[i], var) == 0) {
+            /* redefine the variable if variable exists */
+			strcpy(varTable.word[i], word);
+			return;
+		}
+	}
+    /* else the variable is new, and must be added to the table */
+	strcpy(varTable.var[varIndex], var);
+	strcpy(varTable.word[varIndex], word);
+	varIndex++;
+
+    printd("New Variable Name> ", var);
+    printd("New Variable Val> ", word);
+}
+
+void unsetenv_cmd(const char* var) {
+    for (int i = 0; i < varIndex; i++) {
+        if (strcmp(varTable.var[i], var) == 0) {    // if the variable exists in the table...
+            for (int j = i; j < varIndex-1; j++) {  // ...remove entry by compressing array
+                strcpy(varTable.var[j], varTable.var[j+1]);
+                strcpy(varTable.word[j], varTable.word[j+1]);
+            }
+            varIndex--;
+        }
+    }
+}
+
+void printenv_cmd() {
+    for (int i = 0; i < varIndex; i++) {
+        printf("%s=%s\n", varTable.var[i], varTable.word[i]);
+    }
+}
+
+/***************************** Alias *****************************/
+
 void setalias_cmd(const char* name, const char* word) {
     for (int i = 0; i < aliasIndex; i++) {
 		if(strcmp(name, word) == 0) {
-			printf("Error, expansion of \"%s\" would create a loop.\n", name);
+            /* if alias == word */
+			printf("error: expansion of \"%s\" would create a loop.\n", name);
 			return;
 		} else if((strcmp(aliasTable.name[i], name) == 0) && (strcmp(aliasTable.word[i], word) == 0)) {
-			printf("Error, expansion of \"%s\" would create a loop.\n", name);
+			/* if both the alias and the word already exist */
 			return;
 		} else if(strcmp(aliasTable.name[i], name) == 0) {
+            /* redefine the alias if alias exists */
 			strcpy(aliasTable.word[i], word);
-			return;;
+			return;
 		}
 	}
+    /* else the alias is new, and must be added to the table */
 	strcpy(aliasTable.name[aliasIndex], name);
 	strcpy(aliasTable.word[aliasIndex], word);
 	aliasIndex++;
@@ -62,6 +103,20 @@ void setalias_cmd(const char* name, const char* word) {
     printd("New Alias Val> ", word);
 }
 
-void echo_cmd(const char* val) {
-    printf("%s\n", val);
+void unalias_cmd(const char* name) {
+    for (int i = 0; i < aliasIndex; i++) {
+        if (strcmp(aliasTable.name[i], name) == 0) {    // if the alias exists in the table...
+            for (int j = i; j < aliasIndex-1; j++) {    // ...remove entry by compressing array
+                strcpy(aliasTable.name[j], aliasTable.name[j+1]);
+                strcpy(aliasTable.word[j], aliasTable.word[j+1]);
+            }
+            aliasIndex--;
+        }
+    }
+}
+
+void printalias_cmd() {
+    for (int i = 0; i < aliasIndex; i++) {
+        printf("%s=%s\n", aliasTable.name[i], aliasTable.word[i]);
+    }
 }

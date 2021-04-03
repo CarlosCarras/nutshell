@@ -4,8 +4,6 @@
 #include "nutshell_lib.h"
 #include "parse-spec.tab.h"
 
-
-
 char buf[100];
 char *s;
 
@@ -25,11 +23,15 @@ whitespace      [ \t\n]+
 %%
 
 ^cd             {return CD;}
-^bye            {return BYE;}
 ^pwd            {return PWD;}
-^setenv         {return SETENV;}
-^alias		    {return ALIAS;}
 ^echo           {return ECHO_CMD;}
+^bye            {return BYE;}
+^setenv         {return SETENV;}
+^unsetenv       {return UNSETENV;}
+^printenv		{return PRINTENV;}
+^alias		    {return ALIAS;}
+^unalias	    {return UNALIAS;}
+^printalias		{return PRINTALIAS;}
 
 {alias}         {
                     memmove(yytext, yytext+2, strlen(yytext));  // eliminate first two chars, '${'
@@ -42,6 +44,8 @@ whitespace      [ \t\n]+
                         }
                         free(yycopy);
                         return WORD;
+                    } else {
+                        return INVALIDALIAS;
                     }
                 }
 
@@ -53,8 +57,8 @@ whitespace      [ \t\n]+
 <STRING>\n      {return INVALID;}
 <STRING>.       {*s++ = *yytext; return WORD;}
 
+{newline}       {return END;}
 {word}          {yylval.string=strdup(yytext); return WORD;}
-{newline}       {return NEWLINE;}
 {metachar}      {return (int)yytext[0];}
 {whitespace}    {;}
 .               {return INVALID;}
