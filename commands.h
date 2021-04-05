@@ -3,6 +3,7 @@
 #define NUTSHELL_CMDS_H
 
 #include <unistd.h>
+#include "nutshell_lib.h"
 
 #define ENV_HOME getenv("HOME")
 
@@ -22,5 +23,17 @@ void printenv_cmd();
 void setalias_cmd(const char* name, const char* val);
 void unalias_cmd(const char* name);
 void printalias_cmd();
+
+/************************* Other Command *************************/
+void handle_cmd(const char* command, 
+                const char* options, 
+                const char* args,  
+                const char* standarddin,
+                const char* stdandardout,
+                const char* stdandarderr,
+                int background
+);
+
+void interpret_cmd(struct cmdTable *cmd);
 
 #endif // NUTSHELL_CMDS_H

@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "commands.h"
-#include "nutshell_lib.h"
 
 void cd_home() {
     cd_cmd(ENV_HOME);
@@ -118,5 +117,36 @@ void unalias_cmd(const char* name) {
 void printalias_cmd() {
     for (int i = 0; i < aliasIndex; i++) {
         printf("%s=%s\n", aliasTable.name[i], aliasTable.word[i]);
+    }
+}
+
+/************************* Other Command *************************/
+
+void handle_cmd(const char* command, 
+                const char* options, 
+                const char* args,  
+                const char* standarddin,
+                const char* stdandardout,
+                const char* stdandarderr,
+                int background
+) {
+    struct cmdTable cmd;
+
+    cmd.command = command;
+    cmd.options = options;
+    cmd.args = args;
+    cmd.standardin = standarddin;
+    cmd.standardout = stdandardout;
+    cmd.standarderr = stdandarderr;
+    cmd.background = background;
+
+    interpret_cmd(&cmd);
+}
+
+void interpret_cmd(struct cmdTable *cmd) {
+    if (cmd) {
+        system(cmd->command);
+        printd("CMD:", cmd->command);
+        printd("ARGS:", cmd->args);
     }
 }
