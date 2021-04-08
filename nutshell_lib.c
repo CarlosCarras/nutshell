@@ -19,9 +19,27 @@ void setStartupVars() {
     setVar("PATH", ".:/bin");
 }
 
+char* subVar(char* var) {
+    for (int i = 0; i < varIndex; i++) {
+        if(strcmp(varTable.var[i], var) == 0) {
+            return varTable.word[i];
+        }
+    }
+    return var;
+}
+
+int isVar(char* var) {
+    for (int i = 0; i < varIndex; i++) {
+        if(strcmp(varTable.var[i], var) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 /************************** Alias Table **************************/
 
-char* subAliases(char* name) {
+char* subAlias(char* name) {
     for (int i = 0; i < aliasIndex; i++) {
         if(strcmp(aliasTable.name[i], name) == 0) {
             return aliasTable.word[i];

@@ -44,11 +44,11 @@ command: CD                {cd_home();}
        | PRINTALIAS        {printalias_cmd();}
        | INVALID           {printf("error: invalid arguements.\n");}
        | INVALIDALIAS      {printf("error: invalid alias name.\n");}
-       | cmd arglist background {handle_cmd($1, $2, NULL, NULL, NULL, NULL, $3);} // NOT WORKING!
+       | cmd               {handle_cmd($1, NULL, NULL, NULL, NULL, NULL, 0);} // NOT WORKING!
        |                   {printf("error: unknown command.\n"); return 1;}
        ;
 
-cmd: WORD                  {$$ = $1;}
+cmd: WORD                  {$$ = subAlias($1);}
 
 arglist: WORD              {$$ = $1;}
        | arglist WORD      {$$ = $1;}

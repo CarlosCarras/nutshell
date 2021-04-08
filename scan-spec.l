@@ -13,7 +13,7 @@ char *s;
 %option noyywrap
 %x STRING
 
-alias           \$\{(.*?)\}
+envvar          \$\{(.*?)\}
 quote           ["]
 word            [^ \\<>|="&\t\n]+
 metachar        [\\<>|"&]
@@ -33,19 +33,20 @@ whitespace      [ \t\n]+
 ^unalias	    {return UNALIAS;}
 ^printalias		{return PRINTALIAS;}
 
-{alias}         {
+{envvar}        {
                     memmove(yytext, yytext+2, strlen(yytext));  // eliminate first two chars, '${'
                     yytext[strlen(yytext)-1] = '\0';            // eliminate last char, '}'
                     
-                    if(isAlias(yytext)) {
-                        char *yycopy = strdup(subAliases(yytext));
+                    if(isVar(yytext)) {
+                        char *yycopy = strdup(subVar(yytext));
                         for (int i = strlen(yycopy)-1; i >= 0; --i) {
                             unput(yycopy[i]);
                         }
                         free(yycopy);
                         return WORD;
                     } else {
-                        return INVALIDALIAS;
+                        yylval.string=strdup(yytext);
+                        return WORD;
                     }
                 }
 

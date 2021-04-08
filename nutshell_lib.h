@@ -36,7 +36,9 @@ char cwd[PATH_MAX];
 /*************************** Functions ***************************/
 void setVar(const char* name, const char* word);
 void setStartupVars();
-char* subAliases(char* name);
+char* subVar(char* var);
+int isVar(char* var);
+char* subAlias(char* name);
 int isAlias(char* name);
 void printd(const char* desc, const char* val);
 void printerr();

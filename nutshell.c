@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "parse-spec.tab.h"
 #include "nutshell_lib.h"
 
@@ -20,11 +21,11 @@ int main(void) {
     system("clear");            // clears terminal window
 
     while(1) {
-        // getcwd(cwd, sizeof(cwd));
-        // printf(BLUE "nutshell");
-        // printf(WHITE ":");
-        // printf(GREEN "%s", cwd);
-        // printf(WHITE ">> " RESET);
+        getcwd(cwd, sizeof(cwd));
+        printf(BLUE "nutshell");
+        printf(WHITE ":");
+        printf(GREEN "%s", cwd);
+        printf(WHITE ">> " RESET);
 
         yyparse();
     }
