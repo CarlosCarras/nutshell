@@ -71,6 +71,12 @@ int isPattern(char* word) {
     return str.find("?") != end || str.find("*") != end;
 }
 
+char* subPattern(char* word) {
+    // MUST IMPLEMENT
+    printd("Pattern:", "substituted");
+    return word;
+}
+
 /************************ Print Functions ************************/
 
 void printd(const char* desc, const char* val) {

@@ -60,6 +60,7 @@ void setAlias(char* name, char* word);
 char* subAlias(char* name);
 int isAlias(char* name);
 int isPattern(char* word);
+char* subPattern(char* word);
 void printd(const char* desc, const char* val);
 void printd(const std::string& desc, const std::string& val);
 void printerr();

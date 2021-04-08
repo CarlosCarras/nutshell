@@ -65,10 +65,14 @@ whitespace      [ \t\n]+
                     if (strlen(yycopy) > MAX_WORD_LEN) {
                         printf("error: words cannot exceed %d characters.", MAX_WORD_LEN);
                     }
+
                     if (isPattern(yycopy)) {
-                        printd("PATTERN", "Found!");
+                        yylval.string=strdup(subPattern(yytext)); 
+                    } else {
+                        yylval.string=strdup(yytext); 
                     }
-                    yylval.string=strdup(yytext); return WORD;
+                    free(yycopy);
+                    return WORD;
                 }
 
 {metachar}      {return (int)yytext[0];}
