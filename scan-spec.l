@@ -59,7 +59,18 @@ whitespace      [ \t\n]+
 <STRING>.       {*s++ = *yytext; return WORD;}
 
 {newline}       {return END;}
-{word}          {yylval.string=strdup(yytext); return WORD;}
+
+{word}          {
+                    char *yycopy = strdup(yytext);
+                    if (strlen(yycopy) > MAX_WORD_LEN) {
+                        printf("error: words cannot exceed %d characters.", MAX_WORD_LEN);
+                    }
+                    if (isPattern(yycopy)) {
+                        printd("PATTERN", "Found!");
+                    }
+                    yylval.string=strdup(yytext); return WORD;
+                }
+
 {metachar}      {return (int)yytext[0];}
 {whitespace}    {;}
 .               {return INVALID;}

@@ -15,17 +15,14 @@
 
 int main() {
     setStartupVars();      // sets HOME, PATH variables
-    system("clear");            // clears terminal window
+    system("clear");       // clears terminal window
 
     while(1) {
         getcwd(cwd, sizeof(cwd));
-        printf(BLUE "nutshell");
-        printf(WHITE ":");
-        printf(GREEN "%s", cwd);
-        printf(WHITE ">> " RESET);
+        printf(BLUE "nutshell" RESET ":" GREEN "%s" WHITE ">> " RESET, cwd);
 
         yyparse();
-        usleep(100);
+        usleep(500);       // delay to fix race conditions
     }
     return 0;
 }

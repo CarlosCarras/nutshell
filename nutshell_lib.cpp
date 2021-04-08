@@ -1,6 +1,7 @@
 extern "C" {
 #include <errno.h>
 #include <unistd.h>
+#include <string.h>
 }
 #include "nutshell_lib.h"
 #include <iostream>
@@ -60,6 +61,14 @@ char* subAlias(char* name) {
 
 int isAlias(char* name) {
     return any_of(aliasTable.name.begin(), aliasTable.name.end(), [name](const string& s){ return s.compare(name) == 0; });
+}
+
+/************************ Pattern Matching ***********************/
+
+int isPattern(char* word) {
+    string str(word);
+    size_t end = string::npos;
+    return str.find("?") != end || str.find("*") != end;
 }
 
 /************************ Print Functions ************************/

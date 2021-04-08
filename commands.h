@@ -24,6 +24,8 @@ void unalias_cmd(char* name);
 void printalias_cmd();
 
 /************************* Other Command *************************/
+void unknown_command();
+
 void handle_cmd(const char* command, 
                 const char* options, 
                 const char* args,  

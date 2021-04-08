@@ -7,6 +7,8 @@
 
 /**************************** Defines ****************************/
 #define DEBUG_NUTSHELL
+
+#define MAX_WORD_LEN 256
 /**************************** Defines ****************************/
 
 /**************************** Data Types *************************/
@@ -57,6 +59,7 @@ int isVar(char* var);
 void setAlias(char* name, char* word);
 char* subAlias(char* name);
 int isAlias(char* name);
+int isPattern(char* word);
 void printd(const char* desc, const char* val);
 void printd(const std::string& desc, const std::string& val);
 void printerr();

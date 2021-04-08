@@ -68,7 +68,7 @@ void unsetenv_cmd(char* var) {
     if(it != varTable.var.end()) {
         varTable.var.erase(it);
     } else {
-        printd("var does not exist in table", var);
+        printf("error: var '%s'does not exist in table", var);
     }
 }
 
@@ -119,7 +119,7 @@ void unalias_cmd(char* name) {
     if(it != aliasTable.name.end()) {
         aliasTable.name.erase(it);
     } else {
-        printd("alias does not exist in table", name);
+        printf("error: alias %s does not exist in table", name);
     }
 }
 
@@ -136,6 +136,10 @@ void printalias_cmd() {
 }
 
 /************************* Other Command *************************/
+
+void unknown_command() {
+    printf("error: unknown command.\n");
+}
 
 void handle_cmd(const char* command, 
                 const char* options, 
@@ -159,7 +163,20 @@ void handle_cmd(const char* command,
 }
 
 void interpret_cmd(const cmdTable_t& cmd) {
-    system(cmd.command);
-    printd("CMD:", cmd.command);
-    printd("ARGS:", cmd.args);
+    char command[256];
+    strcpy (command, cmd.command);
+    strcat(command, " 2> /dev/null");   // suppress stderr
+    
+    int status = system(command);
+    
+    if (status < 0) {
+        printerr();
+        return;
+    } else if (status == 0x7F00) {
+        unknown_command();
+        return;
+    }
+
+    // printd("CMD:", cmd.command);
+    // printd("ARGS:", cmd.args);
 }
