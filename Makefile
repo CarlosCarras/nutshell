@@ -1,9 +1,12 @@
 # Simple Makefile
 
 CC=/usr/bin/cc
-CFLAGS=#-Wall
+CCC=g++
 
-all:  flex-config bison-config parse-spec scan-spec nutshell commands nutshell_lib nutshell-out
+CFLAGS=-Wall 
+CPPFLAGS=-std=c++17 $(CFLAGS)
+
+all:  flex-config bison-config nutshell_lib commands scan-spec parse-spec nutshell nutshell-out #flex-config bison-config parse-spec scan-spec nutshell commands nutshell_lib nutshell-out
 
 flex-config:
 	flex scan-spec.l
@@ -12,24 +15,22 @@ bison-config:
 	bison -d parse-spec.y
 
 scan-spec:  lex.yy.c
-	$(CC) $(CFLAGS) -c lex.yy.c -o scan-spec.lex.o
-
+	$(CCC) $(CPPFLAGS) -c lex.yy.c -o scan-spec.lex.o
 
 parse-spec:  parse-spec.tab.c 
-	$(CC) $(CFLAGS) -c parse-spec.tab.c -o parse-spec.y.o
+	$(CCC) $(CPPFLAGS) -c parse-spec.tab.c -o parse-spec.y.o
 
+commands:  commands.h commands.cpp
+	$(CCC) $(CPPFLAGS) -c commands.cpp -o commands.o
 
-commands:  commands.h commands.c
-	$(CC) $(CFLAGS) -g -c commands.c -o commands.o
+nutshell_lib:  nutshell_lib.h nutshell_lib.cpp
+	$(CCC) $(CPPFLAGS) -c nutshell_lib.cpp -o nutshell_lib.o
 
-nutshell_lib:  nutshell_lib.h nutshell_lib.c
-	$(CC) $(CFLAGS) -g -c nutshell_lib.c -o nutshell_lib.o
-
-nutshell:  nutshell.c
-	$(CC) $(CFLAGS) -g -c nutshell.c -o nutshell.o 
+nutshell:  nutshell.cpp
+	$(CCC) $(CPPFLAGS) -c nutshell.cpp -o nutshell.o
 
 nutshell-out: 
-	$(CC) $(CFLAGS) -o nutshell nutshell_lib.o commands.o nutshell.o scan-spec.lex.o parse-spec.y.o -ll -lm -lfl
+	$(CCC) $(CPPFLAGS) -o nutshell nutshell_lib.o commands.o nutshell.o scan-spec.lex.o parse-spec.y.o -ll -lm
 
 clean: 
 	rm -rf *.o *.yy.c *.tab.*

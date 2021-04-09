@@ -1,22 +1,35 @@
 #ifndef NUTSHELL_LIB_H
-#define NUTSHELL_LIB_H 
+#define NUTSHELL_LIB_H
 
-#include <limits.h>
+#include <climits>
+#include <string>
+#include <vector>
 
+/**************************** Defines ****************************/
 #define DEBUG_NUTSHELL
+/**************************** Defines ****************************/
 
-/**************************** Structs ****************************/
-struct evTable {
-   char var[128][100];
-   char word[128][100];
-};
+/**************************** Data Types *************************/
+typedef enum terminalColor {
+    BLUE = 0,
+    GREEN,
+    CYAN,
+    WHITE,
+    PURPLE,
+    RESET
+} terminalColor_t;
 
-struct aTable {
-	char name[128][100];
-	char word[128][100];
-};
+typedef struct evTable {
+    std::vector<std::string> var;
+    std::vector<std::string> word;
+} evTable_t;
 
-struct cmdTable {
+typedef struct aTable {
+    std::vector<std::string> name;
+    std::vector<std::string> word;
+} aTable_t;
+
+typedef struct cmdTable {
     const char* command;
     const char* options; 
     const char* args; 
@@ -24,21 +37,29 @@ struct cmdTable {
     const char* standardout;
     const char* standarderr;
     int background;
-};
+} cmdTable_t;
+/**************************** Data Types *************************/
 
 /************************ Global Variables ***********************/
-struct evTable varTable;
-struct aTable aliasTable;
+extern const char* const colorCodes[6];
 
-int aliasIndex, varIndex;
-char cwd[PATH_MAX];
+extern evTable_t varTable;
+extern aTable_t aliasTable;
 
-/*************************** Functions ***************************/
-void setVar(const char* name, const char* word);
+extern char cwd[PATH_MAX];
+/************************ Global Variables ***********************/
+
+/******************** Global Functions ***************************/
+void setVar(char* name, char* word);
 void setStartupVars();
-char* subAliases(char* name);
+char* subVar(char* var);
+int isVar(char* var);
+void setAlias(char* name, char* word);
+char* subAlias(char* name);
 int isAlias(char* name);
 void printd(const char* desc, const char* val);
+void printd(const std::string& desc, const std::string& val);
 void printerr();
+/*************************** Functions ***************************/
 
 #endif // NUTSHELL_LIB_H
