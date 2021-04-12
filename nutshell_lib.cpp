@@ -6,13 +6,14 @@ extern "C" {
 #include "nutshell_lib.h"
 #include <iostream>
 #include <algorithm>
+#include <fstream>
+#include <streambuf>
 
 using namespace std;
 
 evTable_t varTable;
 aTable_t aliasTable;
 char cwd[PATH_MAX];
-const char* const colorCodes[6] = { "\033[0;34m", "\033[0;32m", "\033[0;36m", "\033[0;37m", "\033[0;35m", "\x1B[0m" };
 
 /*************************** Var Table ***************************/
 
@@ -72,8 +73,21 @@ int isPattern(char* word) {
 }
 
 char* subPattern(char* word) {
-    // MUST IMPLEMENT
-    printd("Pattern:", "substituted");
+    string filename = "test.txt";
+    string cmd1 = "ls " + string(word) + " > " + filename;
+    string cmd2 = "rm -f " + filename;
+
+    system(cmd1.c_str());
+
+    /* put all contents of "filename" into std::string outstr. they should
+       already be sorted. */
+    ifstream t(filename);
+    string outstr((istreambuf_iterator<char>(t)),
+                   istreambuf_iterator<char>());
+    replace(outstr.begin(), outstr.end(), '\n', ' ');
+
+    system(cmd2.c_str());
+    printf("%s\n", outstr.c_str());
     return word;
 }
 

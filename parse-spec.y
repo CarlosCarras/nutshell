@@ -9,6 +9,7 @@
     void yyerror(char*);
 
     extern int yylineno;
+
 %}
 
 %start input
@@ -45,7 +46,7 @@ command: CD                {cd_home();}
        | INVALID           {printf("error: invalid arguements.\n");}
        | INVALIDALIAS      {printf("error: invalid alias name.\n");}
        | cmd               {handle_cmd($1, NULL, NULL, NULL, NULL, NULL, 0);} // NOT WORKING!
-       |                   {unknown_command(); return 1;}
+       |                   {unknown_command();}
        ;
 
 cmd: WORD                  {$$ = subAlias($1);}
@@ -57,6 +58,7 @@ arglist: WORD              {$$ = $1;}
 
 background: '&'            {$$ = 1;}
        |                   {$$ = 0;} 
+       ;
 
 %%
 

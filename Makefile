@@ -33,5 +33,5 @@ nutshell-out:
 	$(CCC) $(CPPFLAGS) -o nutshell nutshell_lib.o commands.o nutshell.o scan-spec.lex.o parse-spec.y.o -ll -lm
 
 clean: 
-	rm -rf *.o *.yy.c *.tab.*
+	rm -rf *.o *.yy.c *.tab.* *.out
 	rm -rf nutshell

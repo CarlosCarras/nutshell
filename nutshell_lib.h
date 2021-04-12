@@ -9,18 +9,17 @@
 #define DEBUG_NUTSHELL
 
 #define MAX_WORD_LEN 256
+
+#define BLUE   "\033[0;34m"
+#define GREEN  "\033[0;32m"
+#define CYAN   "\033[0;36m"
+#define WHITE  "\033[0;37m"
+#define PURPLE "\033[0;35m"
+#define RESET  "\x1B[0m"
+
 /**************************** Defines ****************************/
 
 /**************************** Data Types *************************/
-typedef enum terminalColor {
-    BLUE = 0,
-    GREEN,
-    CYAN,
-    WHITE,
-    PURPLE,
-    RESET
-} terminalColor_t;
-
 typedef struct evTable {
     std::vector<std::string> var;
     std::vector<std::string> word;
