@@ -63,6 +63,16 @@ void setenv_cmd(char* var, char* word) {
 }
 
 void unsetenv_cmd(char* var) {
+    if(!existsInTable(varTable.var, var)) {
+        cout << "error: environment variable " << var << " does not exist in table" << endl;
+        return;
+    }
+
+    if(strcmp(var, "PATH") == 0 || strcmp(var, "HOME") == 0) {
+        cout << "error: cannot unset environment variable " << var << endl;
+        return;
+    }
+
     auto index = getTableIndex(varTable.var, var);
     removeTableIndex(varTable.var, index);
     removeTableIndex(varTable.word, index);
@@ -76,7 +86,7 @@ void printenv_cmd() {
     }
 
     for(size_t i = 0; i < varTableSize; ++i) {
-        cout << varTable.var.at(i) << " = " << varTable.word.at(i) << endl;
+        cout << varTable.var.at(i) << "=" << varTable.word.at(i) << endl;
     }
 }
 

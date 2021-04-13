@@ -3,6 +3,7 @@
 	#include <cstdio>
     #include <cstring>
     #include <string>
+    #include <iostream>
     #include "commands.h"
     #include "nutshell_lib.h"
     
@@ -44,8 +45,8 @@ command: CD                {cd_home();}
        | ALIAS             {printalias_cmd();}
        | ALIAS WORD WORD   {setalias_cmd($2, $3);}
        | UNALIAS WORD      {unalias_cmd($2);}
-       | INVALID           {printf("error: invalid arguements.\n");}
-       | INVALIDALIAS      {printf("error: invalid alias name.\n");}
+       | INVALID           {std::cout << "error: invalid arguements." << std::endl;}
+       | INVALIDALIAS      {std::cout << "error: invalid alias name." << std::endl;}
        | cmd               {handle_cmd($1, NULL, NULL, NULL, NULL, NULL, 0);} // NOT WORKING!
        |                   {unknown_command();}
        ;
@@ -64,5 +65,5 @@ background: '&'            {$$ = 1;}
 %%
 
 void yyerror(char *s) {
-    fprintf(stderr, "yyerror: line %d: %s\n", yylineno, s);
+    std::cout << "yyerror: line " << yylineno << ": " << s << std::endl;
 }
