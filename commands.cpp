@@ -63,13 +63,9 @@ void setenv_cmd(char* var, char* word) {
 }
 
 void unsetenv_cmd(char* var) {
-    auto it = find(varTable.var.begin(), varTable.var.end(), var);
-
-    if(it != varTable.var.end()) {
-        varTable.var.erase(it);
-    } else {
-        printf("error: var '%s'does not exist in table", var);
-    }
+    auto index = getTableIndex(varTable.var, var);
+    removeTableIndex(varTable.var, index);
+    removeTableIndex(varTable.word, index);
 }
 
 void printenv_cmd() {
@@ -93,7 +89,22 @@ void setalias_cmd(char* name, char* word) {
         return;
     }
 
-    if(any_of(aliasTable.name.begin(), aliasTable.name.end(), [name](const string& s){ return s.compare(name) == 0; })) {
+    string alias(word);
+    while(true) {
+        if(!existsInTable(aliasTable.name, alias)) {
+            break;
+        }
+
+        auto index = getTableIndex(aliasTable.name, alias);
+        alias = aliasTable.word.at(index);
+
+        if(alias == name) {
+            cout << "error: expansion of " << name << " would create a loop." << endl;
+            return;
+        }
+    }
+
+    if(existsInTable(aliasTable.name, name)) {
         auto it = find(aliasTable.word.begin(), aliasTable.word.end(), word);
         
         if(it != aliasTable.word.end()) {
@@ -114,16 +125,19 @@ void setalias_cmd(char* name, char* word) {
 }
 
 void unalias_cmd(char* name) {
-    auto it = find(aliasTable.name.begin(), aliasTable.name.end(), name);
-
-    if(it != aliasTable.name.end()) {
-        aliasTable.name.erase(it);
-    } else {
-        printf("error: alias %s does not exist in table", name);
+    if(!existsInTable(aliasTable.name, name)) {
+        cout << "error: alias " << name << " does not exist in table";
+        return;
     }
+
+    auto index = getTableIndex(aliasTable.name, name);
+    removeTableIndex(aliasTable.name, index);
+    removeTableIndex(aliasTable.word, index);
 }
 
 void printalias_cmd() {
+    printd("running cmd:", "printalias_cmd()");
+
     auto nameTableSize = aliasTable.name.size();
     auto wordTableSize = aliasTable.word.size();
     if(nameTableSize != wordTableSize) {
@@ -131,14 +145,14 @@ void printalias_cmd() {
     }
 
     for(size_t i = 0; i < nameTableSize; ++i) {
-        cout << aliasTable.name.at(i) << " = " << aliasTable.word.at(i) << endl;
+        cout << aliasTable.name.at(i) << "=" << aliasTable.word.at(i) << endl;
     }
 }
 
 /************************* Other Command *************************/
 
 void unknown_command() {
-    printf("error: unknown command.\n");
+    cout << "error: unknown command" << endl;
 }
 
 void handle_cmd(const char* command, 
@@ -163,11 +177,10 @@ void handle_cmd(const char* command,
 }
 
 void interpret_cmd(const cmdTable_t& cmd) {
-    char command[256];
-    strcpy (command, cmd.command);
-    strcat(command, " 2> /dev/null");   // suppress stderr
+    string command(cmd.command);
+    command.append(" 2> /dev/null"); // suppress stderr
     
-    int status = system(command);
+    int status = system(command.c_str());
     
     if (status < 0) {
         printerr();

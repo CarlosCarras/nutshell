@@ -1,7 +1,8 @@
 %{
-    #include <stdlib.h>
-	#include <stdio.h>
-    #include <string.h>
+    #include <cstdlib>
+	#include <cstdio>
+    #include <cstring>
+    #include <string>
     #include "commands.h"
     #include "nutshell_lib.h"
     
@@ -40,9 +41,9 @@ command: CD                {cd_home();}
        | SETENV WORD WORD  {setenv_cmd($2, $3);}
        | UNSETENV WORD     {unsetenv_cmd($2);}
        | PRINTENV          {printenv_cmd();}
+       | ALIAS             {printalias_cmd();}
        | ALIAS WORD WORD   {setalias_cmd($2, $3);}
        | UNALIAS WORD      {unalias_cmd($2);}
-       | PRINTALIAS        {printalias_cmd();}
        | INVALID           {printf("error: invalid arguements.\n");}
        | INVALIDALIAS      {printf("error: invalid alias name.\n");}
        | cmd               {handle_cmd($1, NULL, NULL, NULL, NULL, NULL, 0);} // NOT WORKING!

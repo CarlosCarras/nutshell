@@ -15,6 +15,32 @@ evTable_t varTable;
 aTable_t aliasTable;
 char cwd[PATH_MAX];
 
+/*************************** All Tables ***************************/
+
+bool existsInTable(const vector<string>& table, const char* key) {
+    return any_of(table.begin(), table.end(), [key](const string& s){ return s.compare(key) == 0; });
+}
+
+bool existsInTable(const vector<string>& table, const string& key) {
+    return any_of(table.begin(), table.end(), [key](const string& s){ return s == key; });
+}
+
+size_t getTableIndex(const vector<string>& table, const char* key) {
+    auto it = find(table.begin(), table.end(), key);
+    return distance(table.begin(), it);
+}
+
+size_t getTableIndex(const vector<string>& table, const string& key) {
+    auto it = find(table.begin(), table.end(), key);
+    return distance(table.begin(), it);
+}
+
+void removeTableIndex(vector<string>& table, size_t index) {
+    table.erase(table.begin() + index);
+}
+
+/*************************** All Tables ***************************/
+
 /*************************** Var Table ***************************/
 
 void setVar(char* name, char* word) {
@@ -68,7 +94,7 @@ int isAlias(char* name) {
 
 int isPattern(char* word) {
     string str(word);
-    size_t end = string::npos;
+    auto end = string::npos;
     return str.find("?") != end || str.find("*") != end;
 }
 
@@ -87,8 +113,12 @@ char* subPattern(char* word) {
     replace(outstr.begin(), outstr.end(), '\n', ' ');
 
     system(cmd2.c_str());
-    printf("%s\n", outstr.c_str());
+    cout << outstr << endl;
     return word;
+
+    // char* out_str_raw = strdup(outstr.c_str());
+    // printf("%s\n", out_str_raw);
+    // return word;
 }
 
 /************************ Print Functions ************************/

@@ -30,6 +30,11 @@ typedef struct aTable {
     std::vector<std::string> word;
 } aTable_t;
 
+typedef struct keyValPair {
+    std::string key;
+    std::string val;
+} keyValPair_t;
+
 typedef struct cmdTable {
     const char* command;
     const char* options; 
@@ -51,6 +56,11 @@ extern char cwd[PATH_MAX];
 /************************ Global Variables ***********************/
 
 /******************** Global Functions ***************************/
+bool existsInTable(const std::vector<std::string>& table, const char* key);
+bool existsInTable(const std::vector<std::string>& table, const std::string& key);
+size_t getTableIndex(const std::vector<std::string>& table, const char* key);
+size_t getTableIndex(const std::vector<std::string>& table, const std::string& key);
+void removeTableIndex(std::vector<std::string>& table, size_t index);
 void setVar(char* name, char* word);
 void setStartupVars();
 char* subVar(char* var);
