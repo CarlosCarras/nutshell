@@ -14,6 +14,22 @@ using namespace std;
 evTable_t varTable;
 aTable_t aliasTable;
 char cwd[PATH_MAX];
+char args[MAX_ARGLIST_LEN];
+
+/**************************** Arglist *****************************/
+
+void restart() {
+    char *begin = args;
+    char *end = begin + sizeof(MAX_ARGLIST_LEN);
+    fill(begin, end, '\0');
+}
+
+void addToArglist(const char* word) {
+    strcat(args, word);
+    strcat(args, " ");
+}
+
+/**************************** Arglist *****************************/
 
 /*************************** All Tables ***************************/
 

@@ -28,7 +28,7 @@ void unknown_command();
 
 void handle_cmd(const char* command, 
                 const char* options, 
-                const char* args,  
+                const char* arguements,  
                 const char* standardin,
                 const char* stdandardout,
                 const char* stdandarderr,

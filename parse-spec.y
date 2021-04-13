@@ -10,7 +10,6 @@
     void yyerror(char*);
 
     extern int yylineno;
-
 %}
 
 %start input
@@ -46,14 +45,14 @@ command: CD                {cd_home();}
        | UNALIAS WORD      {unalias_cmd($2);}
        | INVALID           {printf("error: invalid arguements.\n");}
        | INVALIDALIAS      {printf("error: invalid alias name.\n");}
-       | cmd               {handle_cmd($1, NULL, NULL, NULL, NULL, NULL, 0);} // NOT WORKING!
+       | cmd arglist       {handle_cmd($1, $2, NULL, NULL, NULL, NULL, 0);} // NOT WORKING!
        |                   {unknown_command();}
        ;
 
 cmd: WORD                  {$$ = subAlias($1);}
 
-arglist: WORD              {$$ = $1;}
-       | arglist WORD      {$$ = $1;}
+arglist: WORD              {addToArglist($1); $$ = args;}
+       | arglist WORD      {addToArglist($2); $$ = args;}
        |                   {$$ = NULL;}
        ;
 
@@ -64,5 +63,6 @@ background: '&'            {$$ = 1;}
 %%
 
 void yyerror(char *s) {
-    fprintf(stderr, "yyerror: line %d: %s\n", yylineno, s);
+    // fprintf(stderr, "yyerror: line %d: %s\n", yylineno, s);
+    unknown_command();
 }
