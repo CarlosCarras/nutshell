@@ -83,18 +83,14 @@ void printenv_cmd() {
 /***************************** Alias *****************************/
 
 void setalias_cmd(char* name, char* word) {
+    // if attempting to self-alias
     if(strcmp(name, word) == 0) {
-        /* if alias == word */
         cout << "error: expansion of " << name << " would create a loop." << endl;
         return;
     }
 
-    string alias(word);
-    while(true) {
-        if(!existsInTable(aliasTable.name, alias)) {
-            break;
-        }
-
+    // search for any circular references to self among aliases
+    for(string alias(word); existsInTable(aliasTable.name, alias);) {
         auto index = getTableIndex(aliasTable.name, alias);
         alias = aliasTable.word.at(index);
 
@@ -104,20 +100,14 @@ void setalias_cmd(char* name, char* word) {
         }
     }
 
+    // the alias already exists and should be redefined
     if(existsInTable(aliasTable.name, name)) {
-        auto it = find(aliasTable.word.begin(), aliasTable.word.end(), word);
-        
-        if(it != aliasTable.word.end()) {
-            /* if both the alias and the word already exist */
-            return;
-        }
-
-        /* redefine the alias if alias exists */
-        aliasTable.word.emplace(it, word);
+        auto index = getTableIndex(aliasTable.name, name);
+        aliasTable.word.at(index) = string(word);
         return;
     }
 
-    /* else the variable is new, and must be added to the table */
+    // the alias is new and should be appended to the table
     setAlias(name, word);
 
     printd("New Alias Name> ", name);
