@@ -11,7 +11,6 @@
     void yyerror(char*);
 
     extern int yylineno;
-
 %}
 
 %start input
@@ -45,16 +44,16 @@ command: CD                {cd_home();}
        | ALIAS             {printalias_cmd();}
        | ALIAS WORD WORD   {setalias_cmd($2, $3);}
        | UNALIAS WORD      {unalias_cmd($2);}
-       | INVALID           {std::cout << "error: invalid arguements." << std::endl;}
-       | INVALIDALIAS      {std::cout << "error: invalid alias name." << std::endl;}
-       | cmd               {handle_cmd($1, NULL, NULL, NULL, NULL, NULL, 0);} // NOT WORKING!
+       | INVALID           {invalid_arguments();}
+       | INVALIDALIAS      {invalid_alias();}
+       | cmd arglist       {handle_cmd($1, $2, NULL, NULL, NULL, NULL, 0);} // NOT WORKING!
        |                   {unknown_command();}
        ;
 
 cmd: WORD                  {$$ = subAlias($1);}
 
-arglist: WORD              {$$ = $1;}
-       | arglist WORD      {$$ = $1;}
+arglist: WORD              {addToArglist($1); $$ = args;}
+       | arglist WORD      {addToArglist($2); $$ = args;}
        |                   {$$ = NULL;}
        ;
 
@@ -65,5 +64,5 @@ background: '&'            {$$ = 1;}
 %%
 
 void yyerror(char *s) {
-    std::cout << "yyerror: line " << yylineno << ": " << s << std::endl;
+    unknown_command();
 }

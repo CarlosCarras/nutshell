@@ -155,18 +155,28 @@ void unknown_command() {
     cout << "error: unknown command" << endl;
 }
 
+void invalid_alias() {
+    cout << "error: invalid alias" << endl;
+}
+
+void invalid_arguments() {
+    cout << "error: invalid arguments" << endl;
+}
+
 void handle_cmd(const char* command, 
                 const char* options, 
-                const char* args,  
+                const char* arguements,  
                 const char* standardin,
                 const char* stdandardout,
                 const char* stdandarderr,
                 int background
 ) {
+    printf("ARGS: %s\n", args);
+
     cmdTable_t cmd = {
         .command = command,
         .options = options,
-        .args = args,
+        .args = arguements,
         .standardin = standardin,
         .standardout = stdandardout,
         .standarderr = stdandarderr,
@@ -174,22 +184,18 @@ void handle_cmd(const char* command,
     };
 
     interpret_cmd(cmd);
+    restart();  
 }
 
 void interpret_cmd(const cmdTable_t& cmd) {
     string command(cmd.command);
     command.append(" 2> /dev/null"); // suppress stderr
-    
+
     int status = system(command.c_str());
     
-    if (status < 0) {
-        printerr();
-        return;
-    } else if (status == 0x7F00) {
-        unknown_command();
-        return;
-    }
+    if      (status < 0)       { printerr();        return; }
+    else if (status == 0x7F00) { unknown_command(); return; }
 
-    // printd("CMD:", cmd.command);
-    // printd("ARGS:", cmd.args);
+    //printd("CMD:", cmd.command);
+    //printd("ARGS:", cmd.args);
 }

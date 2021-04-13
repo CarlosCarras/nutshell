@@ -9,6 +9,7 @@
 #define DEBUG_NUTSHELL
 
 #define MAX_WORD_LEN 256
+#define MAX_ARGLIST_LEN 1024
 
 #define BLUE   "\033[0;34m"
 #define GREEN  "\033[0;32m"
@@ -47,15 +48,17 @@ typedef struct cmdTable {
 /**************************** Data Types *************************/
 
 /************************ Global Variables ***********************/
-extern const char* const colorCodes[6];
-
 extern evTable_t varTable;
 extern aTable_t aliasTable;
 
 extern char cwd[PATH_MAX];
+extern char args[MAX_ARGLIST_LEN];
 /************************ Global Variables ***********************/
 
 /******************** Global Functions ***************************/
+void restart();
+void addToArglist(const char* word);
+
 bool existsInTable(const std::vector<std::string>& table, const char* key);
 bool existsInTable(const std::vector<std::string>& table, const std::string& key);
 size_t getTableIndex(const std::vector<std::string>& table, const char* key);

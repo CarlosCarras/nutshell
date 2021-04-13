@@ -9,6 +9,7 @@ using namespace std;
 
 int main() {
     setStartupVars();      // sets HOME, PATH variables
+    restart();
     system("clear");       // clears terminal window
 
     while(1) {
