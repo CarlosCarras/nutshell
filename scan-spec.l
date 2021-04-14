@@ -55,9 +55,9 @@ outpipe         ">"
 <STRING>\\n     {*s++ = '\n';}
 <STRING>\\t     {*s++ = '\t';}
 <STRING>\\\"    {*s++ = '\"';}
-<STRING>{quote} {*s = 0; BEGIN INITIAL;}
+<STRING>{quote} {*s = 0; BEGIN INITIAL; yylval.string=strdup(buf); return WORD;}
 <STRING>\n      {return INVALID;}
-<STRING>.       {*s++ = *yytext; return WORD;}
+<STRING>.       {*s++ = *yytext;}
 
 {inpipe}        {return INPIPE;}
 {outpipe}       {return OUTPIPE;}
