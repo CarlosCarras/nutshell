@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 
 using namespace std;
 
@@ -197,6 +198,43 @@ void interpret_cmd(const cmdTable_t& cmd) {
     // string cmdString(cmd.command);
     // if(cmd.args != NULL && cmd.args[0] != '\0') { cmdString.append(cmd.args); };
 
+    string commandString(cmd.command);
+    ptrdiff_t numQuotedArgs = count(commandString.begin(), commandString.end(), ' ');
+
+    istringstream iss(commandString);
+    string token;
+    vector<string> cmdVector;
+    while(getline(iss, token, ' ')) {
+        cmdVector.emplace_back(token);
+    }
+
+    char* cmdCopy;
+    char* quotedArgsCopy;
+    if(numQuotedArgs > 0) {
+        cmdCopy = new char(cmdVector.at(0).length() + 1);
+        strcpy(cmdCopy, cmdVector.at(0).c_str());
+
+        cmdVector.erase(cmdVector.begin());
+
+        size_t quotedArgsCopySize = 0;
+        for(size_t i = 0; i < cmdVector.size(); ++i) {
+            quotedArgsCopySize += cmdVector.at(i).length() + 1;
+        }
+
+        quotedArgsCopy = new char(quotedArgsCopySize);
+
+        size_t index = 0;
+        for(const auto& arg : cmdVector) {
+            for(char c : arg) {
+                quotedArgsCopy[index++] = c;
+            }
+            quotedArgsCopy[index++] = '\0';
+        }
+    } else {
+        cmdCopy = new char(commandString.length() + 1);
+        strcpy(cmdCopy, commandString.c_str());
+    }
+
     bool hasArgs = cmd.args != NULL;
 
     ptrdiff_t numArgs = 0;
@@ -205,12 +243,18 @@ void interpret_cmd(const cmdTable_t& cmd) {
         argumentsString = string(cmd.args);
         numArgs = count(argumentsString.begin(), argumentsString.end(), ' ') + 1;
     }
-    size_t argsSize = numArgs + 2;
+    size_t argsSize = numQuotedArgs + numArgs + 2;
 
     char* args[argsSize];
 
-    args[0] = (char*)cmd.command;
+    args[0] = cmdCopy;
     args[argsSize-1] = (char*)NULL;
+
+    size_t pos = 0;
+    for(int i = 0; i < numQuotedArgs; ++i) {
+        args[i+1] = &quotedArgsCopy[pos];
+        pos += cmdVector.at(i).length() + 1;
+    }
 
     char* argsCopy;
     if(hasArgs) {
@@ -223,9 +267,9 @@ void interpret_cmd(const cmdTable_t& cmd) {
         }
         argsCopy[argsStrLen] = '\0';
   
-        size_t pos = 0;
+        pos = 0;
         for(int i = 0; i < numArgs; ++i) {
-            args[i+1] = &argsCopy[pos];
+            args[i+1+numQuotedArgs] = &argsCopy[pos];
             pos = argumentsString.find(' ', pos+1) + 1;
         }
     }
@@ -236,8 +280,12 @@ void interpret_cmd(const cmdTable_t& cmd) {
 
     int status = run_cmd(args);
 
+    delete[] cmdCopy;
     if(hasArgs) {
         delete[] argsCopy;
+    }
+    if(numQuotedArgs > 0) {
+        delete[] quotedArgsCopy;
     }
 
     if(status == -1) { unknown_command(); }
