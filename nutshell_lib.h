@@ -56,10 +56,12 @@ extern char args[MAX_ARGLIST_LEN];
 /************************ Global Variables ***********************/
 
 /******************** Global Functions ***************************/
-void run_cmd(const char* cmd);
+int run_cmd(char* const args[]);
+int run_cmd(char* cmd);
 
 void restart();
 void addToArglist(const char* word);
+char* getArglistString();
 
 bool existsInTable(const std::vector<std::string>& table, const char* key);
 bool existsInTable(const std::vector<std::string>& table, const std::string& key);

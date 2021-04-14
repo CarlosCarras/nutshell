@@ -165,21 +165,21 @@ void invalid_arguments() {
 
 void handle_cmd(const char* command, 
                 const char* options, 
-                const char* arguements,  
+                const char* arguments,  
                 const char* standardin,
                 const char* stdandardout,
                 const char* stdandarderr,
                 int background
 ) {
 
-    cout << "CMD: " << command << endl;
-    cout << "OPTIONS: " << options << endl;
-    cout << "ARGS: " << arguements << endl;
+    // cout << "CMD: " << command << endl;
+    // cout << "OPTIONS: " << options << endl;
+    cout << "ARGS: " << (arguments == NULL ? "NULL" : arguments) << endl;
 
     cmdTable_t cmd = {
         .command = command,
         .options = options,
-        .args = arguements,
+        .args = arguments,
         .standardin = standardin,
         .standardout = stdandardout,
         .standarderr = stdandarderr,
@@ -187,14 +187,74 @@ void handle_cmd(const char* command,
     };
 
     interpret_cmd(cmd);
-    restart();  
+    restart();
 }
 
 void interpret_cmd(const cmdTable_t& cmd) {
     // string command(cmd.command);
     // command.append(" 2> /dev/null"); // suppress stderr
 
-    run_cmd(cmd.command);
+    // string cmdString(cmd.command);
+    // if(cmd.args != NULL && cmd.args[0] != '\0') { cmdString.append(cmd.args); };
+
+    bool hasArgs = cmd.args != NULL;
+
+    ptrdiff_t numArgs = 0;
+    string argumentsString;
+    if(hasArgs) {
+        argumentsString = string(cmd.args);
+        numArgs = count(argumentsString.begin(), argumentsString.end(), ' ') + 1;
+    }
+    size_t argsSize = numArgs + 2;
+
+    char* args[argsSize];
+
+    args[0] = (char*)cmd.command;
+    args[argsSize-1] = (char*)NULL;
+
+    char* argsCopy;
+    if(hasArgs) {
+        auto argsStrLen = strlen(cmd.args);
+        argsCopy = new char(argsStrLen+1);
+
+        for(size_t i = 0; i < argsStrLen; ++i) {
+            char original = cmd.args[i];
+            argsCopy[i] = original == ' ' ? '\0' : original;
+        }
+        argsCopy[argsStrLen] = '\0';
+  
+        size_t pos = 0;
+        for(int i = 0; i < numArgs; ++i) {
+            args[i+1] = &argsCopy[pos];
+            pos = argumentsString.find(' ', pos+1) + 1;
+        }
+    }
+
+    for(size_t i = 0; i < argsSize; ++i) {
+        cout << i << " = [" << (args[i] == (char*)NULL ? "NULL" : args[i]) << "]" << endl;
+    }
+
+    int status = run_cmd(args);
+
+    if(hasArgs) {
+        delete[] argsCopy;
+    }
+
+    if(status == -1) { unknown_command(); }
+
+    // auto bufferLength = strlen(cmd.command);
+    // if(cmd.args != NULL) {
+    //     bufferLength += strlen(cmd.args);
+    // }
+
+    // char cmdBuffer[bufferLength + 8];
+    // strcpy(cmdBuffer, cmd.command);
+    // if(cmd.args != NULL && cmd.args[0] != '\0') {
+    //     strcat(cmdBuffer, (const char*)" ");
+    //     strcat(cmdBuffer, cmd.args);
+    // };
+
+    // int status = run_cmd(cmdBuffer);
 
     // int status = system(command.c_str());
     

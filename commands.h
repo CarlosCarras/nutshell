@@ -31,7 +31,7 @@ void invalid_arguments();
 
 void handle_cmd(const char* command, 
                 const char* options, 
-                const char* arguements,  
+                const char* arguments,  
                 const char* standardin,
                 const char* stdandardout,
                 const char* stdandarderr,
