@@ -56,6 +56,8 @@ extern char args[MAX_ARGLIST_LEN];
 /************************ Global Variables ***********************/
 
 /******************** Global Functions ***************************/
+void run_cmd(const char* cmd);
+
 void restart();
 void addToArglist(const char* word);
 

@@ -2,12 +2,14 @@ extern "C" {
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/wait.h>
 }
 #include "nutshell_lib.h"
 #include <iostream>
 #include <algorithm>
 #include <fstream>
 #include <streambuf>
+#include <sstream>
 
 using namespace std;
 
@@ -15,6 +17,62 @@ evTable_t varTable;
 aTable_t aliasTable;
 char cwd[PATH_MAX];
 char args[MAX_ARGLIST_LEN];
+
+void run_cmd(const char* cmd) {
+    int link[2];
+    if(pipe(link) == -1) {
+        cout << "error creating pipe" << endl;
+        return;
+    }
+    auto pid = fork();
+    if(pid == -1) {
+        cout << "error creating child process" << endl;
+        return;
+    }
+
+    if(pid == 0) {
+        // child process
+        dup2(link[1], STDOUT_FILENO);
+        close(link[0]);
+        close(link[1]);
+
+        vector<string> args;
+        string cmd_string(cmd);
+        stringstream ss(cmd_string);
+        string token;
+        while(getline(ss, token, ' ')) {
+            args.push_back(token);
+        }
+
+        string path = "/bin/";
+        path.append(args.at(0));
+
+        char* argv[args.size()+1];
+        for(size_t i = 0; i < args.size(); ++i) {
+            argv[i] = (char*)args[i].c_str();
+        }
+        argv[args.size()] = (char*)NULL;
+
+        int childRetCode = execv(path.c_str(), argv);
+
+        if(childRetCode == -1) {
+            // error
+            cout << "error executing command" << endl;
+            return;
+        }
+    } else {
+        close(link[1]);
+        char output[512];
+        auto size = read(link[0], output, sizeof(output));
+        for(ssize_t i = 0; i < size; ++i) {
+            cout << output[i];
+        }
+
+        cout << endl;
+        wait(nullptr);
+    }
+    return;
+}
 
 /**************************** Arglist *****************************/
 

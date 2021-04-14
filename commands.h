@@ -3,6 +3,7 @@
 
 extern "C" {
 #include <unistd.h>
+#include <sys/wait.h>
 }
 #include "nutshell_lib.h"
 

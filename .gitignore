@@ -3,3 +3,5 @@
 *.tab.*
 .vscode
 nutshell
+cmdtest
+cmdtest.cpp

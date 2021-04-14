@@ -171,7 +171,10 @@ void handle_cmd(const char* command,
                 const char* stdandarderr,
                 int background
 ) {
-    printf("ARGS: %s\n", args);
+
+    cout << "CMD: " << command << endl;
+    cout << "OPTIONS: " << options << endl;
+    cout << "ARGS: " << arguements << endl;
 
     cmdTable_t cmd = {
         .command = command,
@@ -188,13 +191,15 @@ void handle_cmd(const char* command,
 }
 
 void interpret_cmd(const cmdTable_t& cmd) {
-    string command(cmd.command);
-    command.append(" 2> /dev/null"); // suppress stderr
+    // string command(cmd.command);
+    // command.append(" 2> /dev/null"); // suppress stderr
 
-    int status = system(command.c_str());
+    run_cmd(cmd.command);
+
+    // int status = system(command.c_str());
     
-    if      (status < 0)       { printerr();        return; }
-    else if (status == 0x7F00) { unknown_command(); return; }
+    // if      (status < 0)       { printerr();        return; }
+    // else if (status == 0x7F00) { unknown_command(); return; }
 
     //printd("CMD:", cmd.command);
     //printd("ARGS:", cmd.args);
