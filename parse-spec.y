@@ -8,7 +8,7 @@
     #include "nutshell_lib.h"
     
 	int yylex(void);
-    void yyerror(char*);
+    int yyerror(char*);
 
     extern int yylineno;
 %}
@@ -21,7 +21,7 @@
     int boolean;
 }
 
-%token CD BYE PWD SETENV UNSETENV PRINTENV ALIAS UNALIAS PRINTALIAS INVALIDALIAS ECHO_CMD
+%token CD BYE PWD SETENV UNSETENV PRINTENV ALIAS UNALIAS INVALIDALIAS ECHO_CMD
 %token END INVALID
 
 %token<string> WORD
@@ -46,8 +46,8 @@ command: CD                {cd_home();}
        | UNALIAS WORD      {unalias_cmd($2);}
        | INVALID           {invalid_arguments();}
        | INVALIDALIAS      {invalid_alias();}
-       | cmd arglist       {handle_cmd($1, $2, NULL, NULL, NULL, NULL, 0);} // NOT WORKING!
-       |                   {unknown_command();}
+       | cmd arglist       {handle_cmd($1, NULL, $2, NULL, NULL, NULL, 0);} // NOT WORKING!
+       |                   {printf("TEST\n");}
        ;
 
 cmd: WORD                  {$$ = subAlias($1);}
@@ -63,6 +63,7 @@ background: '&'            {$$ = 1;}
 
 %%
 
-void yyerror(char *s) {
+int yyerror(char *s) {
     unknown_command();
+    return 0;
 }

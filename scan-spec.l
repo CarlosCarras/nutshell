@@ -31,7 +31,6 @@ whitespace      [ \t\n]+
 ^printenv		{return PRINTENV;}
 ^alias		    {return ALIAS;}
 ^unalias	    {return UNALIAS;}
-^printalias		{return PRINTALIAS;}
 
 {envvar}        {
                     memmove(yytext, yytext+2, strlen(yytext));  // eliminate first two chars, '${'
@@ -58,7 +57,7 @@ whitespace      [ \t\n]+
 <STRING>\n      {return INVALID;}
 <STRING>.       {*s++ = *yytext; return WORD;}
 
-{newline}       {return END;}
+{newline}       {printf("!");return END;}
 
 {word}          {
                     char *yycopy = strdup(yytext);
