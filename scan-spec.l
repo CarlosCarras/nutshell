@@ -64,6 +64,7 @@ outpipe         ">"
 {newline}       {return END;}
 
 {word}          {
+                    printd("Word:", yytext);
                     char *yycopy = strdup(yytext);
                     if (strlen(yycopy) > MAX_WORD_LEN) {
                         printf("error: words cannot exceed %d characters.", MAX_WORD_LEN);
