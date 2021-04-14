@@ -18,8 +18,9 @@ quote           ["]
 word            [^ \\<>|="&\t\n]+
 metachar        [\\<>|"&]
 newline         "\n"
-carriage        "\r"
 whitespace      [ \t\n]+
+inpipe          "<"
+outpipe         ">"
 
 %%
 
@@ -58,8 +59,9 @@ whitespace      [ \t\n]+
 <STRING>\n      {return INVALID;}
 <STRING>.       {*s++ = *yytext; return WORD;}
 
-{carriage}      {printf("CR!");}
-{newline}       {printf("LF!"); return END;}
+{inpipe}        {return INPIPE;}
+{outpipe}       {return OUTPIPE;}
+{newline}       {return END;}
 
 {word}          {
                     char *yycopy = strdup(yytext);

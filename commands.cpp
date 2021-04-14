@@ -191,8 +191,8 @@ void handle_cmd(const char* command,
 }
 
 void interpret_cmd(const cmdTable_t& cmd) {
-    string command(cmd.command);
-    command.append(" 2> /dev/null"); // suppress stderr
+    // string command(cmd.command);
+    // command.append(" 2> /dev/null"); // suppress stderr
 
     // string cmdString(cmd.command);
     // if(cmd.args != NULL && cmd.args[0] != '\0') { cmdString.append(cmd.args); };
@@ -256,10 +256,10 @@ void interpret_cmd(const cmdTable_t& cmd) {
 
     // int status = run_cmd(cmdBuffer);
 
-    int status = system(command.c_str());
+    // int status = system(command.c_str());
     
-    if      (status < 0)       { printerr();        return; }
-    else if (status == 0x7F00) { unknown_command(); return; }
+    // if      (status < 0)       { printerr();        return; }
+    // else if (status == 0x7F00) { unknown_command(); return; }
 
     //printd("CMD:", cmd.command);
     //printd("ARGS:", cmd.args);

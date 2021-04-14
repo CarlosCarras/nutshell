@@ -14,7 +14,7 @@ int main() {
 
     while(1) {
         getcwd(cwd, sizeof(cwd));
-        // cout << BLUE "nutshell" RESET ":" GREEN << cwd << WHITE ">> " RESET;
+        cout << BLUE "nutshell" RESET ":" GREEN << cwd << WHITE ">> " RESET;
         
         yyparse();
         usleep(1000);       // delay to fix race conditions

@@ -3,8 +3,8 @@
 CC=/usr/bin/cc
 CCC=g++
 
-CFLAGS=-Wall 
-CPPFLAGS=-std=c++17 $(CFLAGS)
+CFLAGS=-Wall
+CPPFLAGS=-std=c++17 -Wno-write-strings $(CFLAGS)
 
 all:  flex-config bison-config nutshell_lib commands scan-spec parse-spec nutshell nutshell-out #flex-config bison-config parse-spec scan-spec nutshell commands nutshell_lib nutshell-out
 

@@ -1,13 +1,13 @@
 %{
     #include <cstdlib>
-	#include <cstdio>
+    #include <cstdio>
     #include <cstring>
     #include <string>
     #include <iostream>
     #include "commands.h"
     #include "nutshell_lib.h"
     
-	int yylex(void);
+    int yylex(void);
     int yyerror(char*);
 
     extern int yylineno;
@@ -22,11 +22,12 @@
 }
 
 %token CD BYE PWD SETENV UNSETENV PRINTENV ALIAS UNALIAS INVALIDALIAS ECHO_CMD
+%token INPIPE OUTPIPE
 %token END INVALID
 
 %token<string> WORD
 
-%type<string> cmd arglist
+%type<string> cmd arglist inputfile outputfile
 %type<boolean> background
 
 %%
@@ -46,7 +47,7 @@ command: CD                {cd_home();}
        | UNALIAS WORD      {unalias_cmd($2);}
        | INVALID           {invalid_arguments();}
        | INVALIDALIAS      {invalid_alias();}
-       | cmd arglist       {handle_cmd($1, NULL, $2, NULL, NULL, NULL, 0);} // NOT WORKING!
+       | cmd arglist inputfile outputfile background {handle_cmd($1, NULL, $2, $3, $4, NULL, $5);} // NOT WORKING!
        |                   {unknown_command();}
        ;
 
@@ -55,6 +56,14 @@ cmd: WORD                  {$$ = subAlias($1);}
 arglist: WORD              {addToArglist($1); $$ = getArglistString();}
        | arglist WORD      {addToArglist($2); $$ = getArglistString();}
        |                   {$$ = NULL;}
+       ;
+
+inputfile: INPIPE WORD     {$$ = $2;}
+       |                   {$$ = NULL;}
+       ;
+
+outputfile:OUTPIPE WORD    {$$ = $2;}
+       |                   {$$ = NULL;} 
        ;
 
 background: '&'            {$$ = 1;}
