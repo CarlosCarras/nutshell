@@ -12,6 +12,7 @@ void cd_home() {
 }
 
 void cd_cmd(char* dest) {
+    cout << "DEST: " << (dest == NULL ? "NULL" : dest) << endl;
     int status = chdir(dest);
     if (status < 0) { printerr(); }
 }
@@ -22,7 +23,18 @@ void pwd_cmd() {
 }
 
 void echo_cmd(char* val) {
-    cout << val << endl;
+    string str(val);
+    if(str.at(0) == '$' && str.at(1) == '{' && str.at(str.length()-1) == '}') {
+        // check for env var
+        string envVar = str.substr(2, str.length()-3);
+        if(existsInTable(varTable.var, envVar)) {
+            // print out env var value
+            cout << varTable.word.at(getTableIndex(varTable.var, envVar)) << endl;
+            return;
+        }
+    }
+
+    cout << str << endl;
 }
 
 void bye_cmd() {
