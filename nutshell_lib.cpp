@@ -18,73 +18,133 @@ aTable_t aliasTable;
 char cwd[PATH_MAX];
 char args[MAX_ARGLIST_LEN];
 
-void run_cmd(const char* cmd) {
-    int link[2];
-    if(pipe(link) == -1) {
-        cout << "error creating pipe" << endl;
-        return;
-    }
-    auto pid = fork();
+int run_cmd(char* const args[]) {
+    string dir = "/bin/";
+    dir.append(args[0]);
+    
+    pid_t pid = fork();
     if(pid == -1) {
-        cout << "error creating child process" << endl;
-        return;
+        cout << "ERROR: cannot create child" << endl;
+        return 1;
     }
 
     if(pid == 0) {
-        // child process
-        dup2(link[1], STDOUT_FILENO);
-        close(link[0]);
-        close(link[1]);
-
-        vector<string> args;
-        string cmd_string(cmd);
-        stringstream ss(cmd_string);
-        string token;
-        while(getline(ss, token, ' ')) {
-            args.push_back(token);
-        }
-
-        string path = "/bin/";
-        path.append(args.at(0));
-
-        char* argv[args.size()+1];
-        for(size_t i = 0; i < args.size(); ++i) {
-            argv[i] = (char*)args[i].c_str();
-        }
-        argv[args.size()] = (char*)NULL;
-
-        int childRetCode = execv(path.c_str(), argv);
-
-        if(childRetCode == -1) {
-            // error
-            cout << "error executing command" << endl;
-            return;
-        }
+        execv(dir.c_str(), args);
+        cout << "ERROR: cannot run command" << endl;
+        return -1;
     } else {
-        close(link[1]);
-        char output[512];
-        auto size = read(link[0], output, sizeof(output));
-        for(ssize_t i = 0; i < size; ++i) {
-            cout << output[i];
+        int status;
+        if(waitpid(pid, &status, 0) == -1) {
+            cout << "ERROR: awaiting child process" << endl;
+            return 1;
         }
-
-        cout << endl;
-        wait(nullptr);
     }
-    return;
+
+    return 0;
 }
+
+// int run_cmd(char* cmd) {
+//     cout << "command: " << cmd << endl;
+//     int fd[2];
+//     if(pipe(fd) == -1) {
+//         cout << "error creating pipe" << endl;
+//         return 1;
+//     }
+//     auto pid = fork();
+//     if(pid == -1) {
+//         cout << "error creating child process" << endl;
+//         return 1;
+//     }
+
+//     if(pid == 0) {
+//         // child process
+//         cout << "child" << endl;
+//         dup2(fd[1], STDOUT_FILENO);
+//         close(fd[0]);
+//         close(fd[1]);
+
+//         string temp(cmd);
+//         auto numArgs = count(temp.begin(), temp.end(), ' ') + 1;
+//         char* argv[numArgs+1];
+
+//         size_t found = 0, index = 0;
+//         while(found != string::npos) {
+//             argv[index++] = &cmd[found];
+//             found = temp.find(" ");
+//         }
+//         argv[numArgs] = (char*)NULL;
+
+//         cout << "argv[]: ->";
+//         for(size_t i = 0; i < index; ++i) {
+//             cout << argv[i] << "->";
+//         }
+//         cout << endl;
+
+//         string path = "/bin/" + string(argv[0]);
+
+//         // vector<string> args;
+//         // string cmd_string(cmd);
+//         // stringstream ss(cmd_string);
+//         // string token;
+//         // while(getline(ss, token, ' ')) {
+//         //     args.push_back(token);
+//         // }
+
+//         // string path = "/bin/";
+//         // path.append(args.at(0));
+
+//         // char* argv[args.size()+1];
+//         // for(size_t i = 0; i < args.size(); ++i) {
+//         //     argv[i] = (char*)(args[i].c_str());
+//         // }
+//         // argv[args.size()] = (char*)NULL;
+
+//         int childRetCode = execv(path.c_str(), argv);
+
+//         if(childRetCode == -1) {
+//             // error
+//             cout << "error executing command" << endl;
+//             return -1;
+//         }
+//     } else {
+//         close(fd[1]);
+//         char output[1024];
+//         auto size = read(fd[0], output, sizeof(output)*sizeof(*output));
+
+//         output[size*sizeof(*output)] = '\0';
+
+//         cout << "out: " << output << endl;
+//         while(wait(nullptr) != pid);
+//     }
+//     return 0;
+// }
 
 /**************************** Arglist *****************************/
 
+vector<string> argsList;
+char argsString[512];
+
 void restart() {
-    char *begin = args;
-    char *end = begin + sizeof(MAX_ARGLIST_LEN);
-    fill(begin, end, '\0');
+    argsList.clear();
 }
 
 void addToArglist(const char* word) {
-    strcat(args, word);
-    strcat(args, " ");
+    argsList.emplace_back(word);
+}
+
+char* getArglistString() {
+    cout << "check 0" << endl;
+    size_t index = 0;
+    for(const auto& arg : argsList) {
+        for(const auto& c : arg) {
+            argsString[index++] = c;
+        }
+        argsString[index++] = ' ';
+    }
+    // replace last space delimiter with null char
+    argsString[index-1] = '\0';
+
+    return argsString;
 }
 
 /**************************** Arglist *****************************/
