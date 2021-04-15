@@ -18,7 +18,7 @@ quote           ["]
 word            [^ \\<>|="&\t\n]+
 metachar        [\\<>|"&]
 newline         "\n"
-whitespace      [ \t\n]+
+whitespace      [ \t]
 inpipe          "<"
 outpipe         ">"
 
@@ -44,27 +44,40 @@ outpipe         ">"
                             unput(yycopy[i]);
                         }
                         free(yycopy);
-                        return WORD;
                     } else {
                         yylval.string=strdup(yytext);
                         return WORD;
                     }
                 }
 
-{quote}		    {BEGIN STRING; s = buf;};
-<STRING>\\n     {*s++ = '\n';}
-<STRING>\\t     {*s++ = '\t';}
-<STRING>\\\"    {*s++ = '\"';}
-<STRING>{quote} {*s = 0; BEGIN INITIAL; yylval.string=strdup(buf); return WORD;}
-<STRING>\n      {return INVALID;}
-<STRING>.       {*s++ = *yytext;}
+{quote}		     {BEGIN STRING; s = buf;};
+<STRING>\\n      {*s++ = '\n';}
+<STRING>\\t      {*s++ = '\t';}
+<STRING>{envvar} {
+                    memmove(yytext, yytext+2, strlen(yytext));  // eliminate first two chars, '${'
+                    yytext[strlen(yytext)-1] = '\0';            // eliminate last char, '}'
+                    
+                    if(isVar(yytext)) {
+                        char *yycopy = strdup(subVar(yytext));
+                        for (int i = strlen(yycopy)-1; i >= 0; --i) {
+                            unput(yycopy[i]);
+                        }
+                        free(yycopy);
+                    } else {
+                        yylval.string=strdup(yytext);
+                        return WORD;
+                    }
+                 }
+<STRING>\\\"     {*s++ = '\"';}
+<STRING>{quote}  {*s = 0; BEGIN INITIAL; yylval.string=strdup(buf); return WORD;}
+<STRING>\n       {return INVALID;}
+<STRING>.        {*s++ = *yytext;}
 
 {inpipe}        {return INPIPE;}
 {outpipe}       {return OUTPIPE;}
 {newline}       {return END;}
 
 {word}          {
-                    printd("Word:", yytext);
                     char *yycopy = strdup(yytext);
                     if (strlen(yycopy) > MAX_WORD_LEN) {
                         printf("error: words cannot exceed %d characters.", MAX_WORD_LEN);
@@ -72,9 +85,9 @@ outpipe         ">"
                     }
 
                     if (isPattern(yycopy)) {
-                        yylval.string=strdup(subPattern(yytext)); 
+                        yylval.string=strdup(subPattern(yycopy)); 
                     } else {
-                        yylval.string=strdup(yytext); 
+                        yylval.string=strdup(yycopy); 
                     }
                     free(yycopy);
                     return WORD;

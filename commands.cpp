@@ -24,15 +24,15 @@ void pwd_cmd() {
 
 void echo_cmd(char* val) {
     string str(val);
-    if(str.at(0) == '$' && str.at(1) == '{' && str.at(str.length()-1) == '}') {
-        // check for env var
-        string envVar = str.substr(2, str.length()-3);
-        if(existsInTable(varTable.var, envVar)) {
-            // print out env var value
-            cout << varTable.word.at(getTableIndex(varTable.var, envVar)) << endl;
-            return;
-        }
-    }
+    // if(str.at(0) == '$' && str.at(1) == '{' && str.at(str.length()-1) == '}') {
+    //     // check for env var
+    //     string envVar = str.substr(2, str.length()-3);
+    //     if(existsInTable(varTable.var, envVar)) {
+    //         // print out env var value
+    //         cout << varTable.word.at(getTableIndex(varTable.var, envVar)) << endl;
+    //         return;
+    //     }
+    // }
 
     cout << str << endl;
 }
@@ -91,16 +91,26 @@ void unsetenv_cmd(char* var) {
     removeTableIndex(varTable.word, index);
 }
 
-void printenv_cmd() {
+string getEnvString() {
     auto varTableSize = varTable.var.size();
     auto wordTableSize = varTable.word.size();
     if(varTableSize != wordTableSize) {
         printd("ERROR: var table and word table unequal sizes", to_string(varTableSize) + " != " + to_string(wordTableSize));
     }
 
+    string env;
     for(size_t i = 0; i < varTableSize; ++i) {
-        cout << varTable.var.at(i) << "=" << varTable.word.at(i) << endl;
+        env.append(varTable.var.at(i) + "=" + varTable.word.at(i) + '\n');
     }
+    return env;
+}
+
+void printenv_cmd() {
+    cout << getEnvString();
+}
+
+void pipeenv_cmd(char* file) {
+
 }
 
 /***************************** Alias *****************************/
@@ -149,8 +159,6 @@ void unalias_cmd(char* name) {
 }
 
 void printalias_cmd() {
-    printd("running cmd:", "printalias_cmd()");
-
     auto nameTableSize = aliasTable.name.size();
     auto wordTableSize = aliasTable.word.size();
     if(nameTableSize != wordTableSize) {
@@ -187,7 +195,10 @@ void handle_cmd(const char* command,
 
     // cout << "CMD: " << command << endl;
     // cout << "OPTIONS: " << options << endl;
-    cout << "ARGS: " << (arguments == NULL ? "NULL" : arguments) << endl;
+    cout << "CMD = [" << (command == NULL ? "NULL" : command) << "]" << endl;
+    cout << "ARGS = [" << (arguments == NULL ? "NULL" : arguments) << "]" << endl;
+    cout << "INFILE = [" << (standardin == NULL ? "NULL" : standardin) << "]" << endl;
+    cout << "OUTFILE = [" << (stdandardout == NULL ? "NULL" : stdandardout) << "]" << endl;
 
     cmdTable_t cmd = {
         .command = command,
