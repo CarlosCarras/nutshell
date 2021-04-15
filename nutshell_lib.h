@@ -81,6 +81,9 @@ int isAlias(char* name);
 int isPattern(char* word);
 char* subPattern(const char* pattern);
 void printerr();
+
+const std::string& getPath();
+std::string getExecPath(const std::string& path, const std::string& program);
 /*************************** Functions ***************************/
 
 #endif // NUTSHELL_LIB_H

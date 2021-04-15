@@ -21,24 +21,49 @@ aTable_t aliasTable;
 char cwd[PATH_MAX];
 char args[MAX_ARGLIST_LEN];
 
+string getExecPath(const string& path, const string& program) {
+    DIR* d;
+    struct dirent* dir;
+    vector<string> fileList;
+    istringstream iss(path);
+    string directory;
+    while(getline(iss, directory, ':')) {
+        d = opendir(directory.c_str());
+        if(d) {
+            while((dir = readdir(d)) != NULL) {
+                fileList.emplace_back(dir->d_name);
+            }
+            closedir(d);
+        }
+
+        for(const auto& f : fileList) {
+            if(f == program) {
+                string path(directory);
+                path.append("/");
+                path.append(f);
+                return directory + "/" + program;
+            }
+        }
+    }
+
+    return string(program);
+}
+
 int run_cmd(char* const args[]) {
-    string dir = "/bin/";
-    dir.append(args[0]);
+    string exe(args[0]);
+    string path = getExecPath(getPath(), exe);
     
     pid_t pid = fork();
     if(pid == -1) {
-        cout << "ERROR: cannot create child" << endl;
         return 1;
     }
 
     if(pid == 0) {
-        execv(dir.c_str(), args);
-        cout << "ERROR: cannot run command" << endl;
+        execv(path.c_str(), args);
         return -1;
     } else {
         int status;
         if(waitpid(pid, &status, 0) == -1) {
-            cout << "ERROR: awaiting child process" << endl;
             return 1;
         }
     }
@@ -262,6 +287,12 @@ char* subVar(char* var) {
 
 int isVar(char* var) {
     return any_of(varTable.var.begin(), varTable.var.end(), [var](const string& s){ return s.compare(var) == 0; });
+}
+
+const string& getPath() {
+    auto it = find(varTable.var.begin(), varTable.var.end(), "PATH");
+    auto index = distance(varTable.var.begin(), it);
+    return varTable.word.at(index);
 }
 
 /************************** Alias Table **************************/
