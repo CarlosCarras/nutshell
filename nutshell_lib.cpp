@@ -5,6 +5,7 @@ extern "C" {
 #include <sys/wait.h>
 #include <dirent.h>
 #include <fnmatch.h>
+#include <fcntl.h>
 }
 #include "nutshell_lib.h"
 #include <iostream>
@@ -38,6 +39,65 @@ int run_cmd(char* const args[]) {
         int status;
         if(waitpid(pid, &status, 0) == -1) {
             cout << "ERROR: awaiting child process" << endl;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int write_to_file(const char* file, const char* data, size_t len, int append) {
+    pid_t pid = fork();
+    if(pid == -1) {
+        return 1;
+    }
+
+    if(pid == 0) {
+        int flags = O_RDWR;
+        mode_t mode = S_IRUSR | S_IWUSR;
+        if(append) {
+            flags |= O_APPEND;
+        } else {
+            flags |= O_CREAT;
+        }
+
+        int fd = open(file, flags, mode);
+        write(fd, data, len);
+        close(fd);
+    } else {
+        int status;
+        if(waitpid(pid, &status, 0) == -1) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int redir_stdout(const char* file, char* const args[], int append) {
+    pid_t pid = fork();
+    if(pid == -1) {
+        return 1;
+    }
+
+    if(pid == 0) {
+        int flags = O_RDWR | (append ? O_APPEND : O_CREAT);
+        mode_t mode = S_IRUSR | S_IWUSR;
+
+        int fd = open(file, flags, mode);
+
+        dup2(fd, STDOUT_FILENO);
+
+        close(fd);
+
+        string path = "/bin/";
+        path.append(args[0]);
+
+        execv(path.c_str(), args);
+        return -1;
+    } else {
+        int status;
+        if(waitpid(pid, &status, 0) == -1) {
             return 1;
         }
     }

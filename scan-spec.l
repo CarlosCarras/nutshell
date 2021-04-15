@@ -19,8 +19,11 @@ word            [^ \\<>|="&\t\n]+
 metachar        [\\<>|"&]
 newline         "\n"
 whitespace      [ \t]
-inpipe          "<"
-outpipe         ">"
+stdin           [<]
+stdout1         >[ \n\t]
+stdout2         >>[ \n\t]
+stderrf         2>[^ "&\t\n]+
+stderro         2>&1
 
 %%
 
@@ -73,8 +76,6 @@ outpipe         ">"
 <STRING>\n       {return INVALID;}
 <STRING>.        {*s++ = *yytext;}
 
-{inpipe}        {return INPIPE;}
-{outpipe}       {return OUTPIPE;}
 {newline}       {return END;}
 
 {word}          {

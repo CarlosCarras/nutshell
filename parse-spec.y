@@ -22,7 +22,7 @@
 }
 
 %token CD BYE PWD SETENV UNSETENV PRINTENV ALIAS UNALIAS INVALIDALIAS ECHO_CMD
-%token INPIPE OUTPIPE
+%token STDIN STDOUT1 STDOUT2 STDERRF STDERRO
 %token END INVALID
 
 %token<string> WORD
@@ -59,11 +59,11 @@ arglist: WORD              {addToArglist($1); $$ = getArglistString();}
        |                   {$$ = NULL;}
        ;
 
-inputfile: INPIPE WORD     {$$ = $2;}
+inputfile: STDIN WORD      {$$ = $2;}
        |                   {$$ = NULL;}
        ;
 
-outputfile:OUTPIPE WORD    {$$ = $2;}
+outputfile: STDOUT1 WORD   {$$ = $2;}
        |                   {$$ = NULL;} 
        ;
 
