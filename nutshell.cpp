@@ -10,7 +10,7 @@ using namespace std;
 int main() {
     setStartupVars();      // sets HOME, PATH variables
     restart();
-    system("clear");       // clears terminal window
+    run_cmd((char* const[]){ (char*)"clear", (char*)NULL }); // clear terminal window
 
     while(1) {
         getcwd(cwd, sizeof(cwd));
