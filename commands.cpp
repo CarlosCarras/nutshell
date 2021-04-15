@@ -23,18 +23,7 @@ void pwd_cmd() {
 }
 
 void echo_cmd(char* val) {
-    string str(val);
-    // if(str.at(0) == '$' && str.at(1) == '{' && str.at(str.length()-1) == '}') {
-    //     // check for env var
-    //     string envVar = str.substr(2, str.length()-3);
-    //     if(existsInTable(varTable.var, envVar)) {
-    //         // print out env var value
-    //         cout << varTable.word.at(getTableIndex(varTable.var, envVar)) << endl;
-    //         return;
-    //     }
-    // }
-
-    cout << str << endl;
+    cout << val << endl;
 }
 
 void bye_cmd() {
@@ -195,10 +184,11 @@ void handle_cmd(const char* command,
 
     // cout << "CMD: " << command << endl;
     // cout << "OPTIONS: " << options << endl;
-    cout << "CMD = [" << (command == NULL ? "NULL" : command) << "]" << endl;
-    cout << "ARGS = [" << (arguments == NULL ? "NULL" : arguments) << "]" << endl;
-    cout << "INFILE = [" << (standardin == NULL ? "NULL" : standardin) << "]" << endl;
-    cout << "OUTFILE = [" << (stdandardout == NULL ? "NULL" : stdandardout) << "]" << endl;
+    cout << "CMD=[" << (command == NULL ? "NULL" : command) << "] ";
+    cout << "ARGS=[" << (arguments == NULL ? "NULL" : arguments) << "] ";
+    cout << "INFILE=[" << (standardin == NULL ? "NULL" : standardin) << "] ";
+    cout << "OUTFILE=[" << (stdandardout == NULL ? "NULL" : stdandardout) << "]";
+    cout << endl;
 
     cmdTable_t cmd = {
         .command = command,
@@ -231,30 +221,23 @@ void interpret_cmd(const cmdTable_t& cmd) {
         cmdVector.emplace_back(token);
     }
 
-    char* cmdCopy;
-    char* quotedArgsCopy;
+    char cmdCopy[64];
+    char argsCopy[512];
+
+    size_t argsCopyIndex = 0;
+
     if(numQuotedArgs > 0) {
-        cmdCopy = new char(cmdVector.at(0).length() + 1);
         strcpy(cmdCopy, cmdVector.at(0).c_str());
 
         cmdVector.erase(cmdVector.begin());
 
-        size_t quotedArgsCopySize = 0;
-        for(size_t i = 0; i < cmdVector.size(); ++i) {
-            quotedArgsCopySize += cmdVector.at(i).length() + 1;
-        }
-
-        quotedArgsCopy = new char(quotedArgsCopySize);
-
-        size_t index = 0;
         for(const auto& arg : cmdVector) {
             for(char c : arg) {
-                quotedArgsCopy[index++] = c;
+                argsCopy[argsCopyIndex++] = c;
             }
-            quotedArgsCopy[index++] = '\0';
+            argsCopy[argsCopyIndex++] = '\0';
         }
     } else {
-        cmdCopy = new char(commandString.length() + 1);
         strcpy(cmdCopy, commandString.c_str());
     }
 
@@ -275,24 +258,22 @@ void interpret_cmd(const cmdTable_t& cmd) {
 
     size_t pos = 0;
     for(int i = 0; i < numQuotedArgs; ++i) {
-        args[i+1] = &quotedArgsCopy[pos];
+        args[i+1] = &argsCopy[pos];
         pos += cmdVector.at(i).length() + 1;
     }
 
-    char* argsCopy;
     if(hasArgs) {
         auto argsStrLen = strlen(cmd.args);
-        argsCopy = new char(argsStrLen+1);
 
         for(size_t i = 0; i < argsStrLen; ++i) {
             char original = cmd.args[i];
-            argsCopy[i] = original == ' ' ? '\0' : original;
+            argsCopy[argsCopyIndex++] = original == ' ' ? '\0' : original;
         }
-        argsCopy[argsStrLen] = '\0';
+        argsCopy[argsCopyIndex] = '\0';
   
         pos = 0;
-        for(int i = 0; i < numArgs; ++i) {
-            args[i+1+numQuotedArgs] = &argsCopy[pos];
+        for(int i = 0; i < numArgs + numQuotedArgs; ++i) {
+            args[i+1] = &argsCopy[pos];
             pos = argumentsString.find(' ', pos+1) + 1;
         }
     }
@@ -302,14 +283,6 @@ void interpret_cmd(const cmdTable_t& cmd) {
     }
 
     int status = run_cmd(args);
-
-    delete[] cmdCopy;
-    if(hasArgs) {
-        delete[] argsCopy;
-    }
-    if(numQuotedArgs > 0) {
-        delete[] quotedArgsCopy;
-    }
 
     if(status == -1) { unknown_command(); }
 

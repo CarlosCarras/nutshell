@@ -85,7 +85,7 @@ outpipe         ">"
                     }
 
                     if (isPattern(yycopy)) {
-                        yylval.string=strdup(subPattern(yycopy)); 
+                        yylval.string=strdup(subPattern(yycopy));
                     } else {
                         yylval.string=strdup(yycopy); 
                     }

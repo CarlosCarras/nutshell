@@ -48,14 +48,14 @@ command: CD                {cd_home();}
        | UNALIAS WORD      {unalias_cmd($2);}
        | INVALID           {invalid_arguments();}
        | INVALIDALIAS      {invalid_alias();}
-       | cmd arglist inputfile outputfile background {handle_cmd($1, NULL, $2, $3, $4, NULL, $5);} // NOT WORKING!
+       | cmd arglist inputfile outputfile background {handle_cmd($1, NULL, $2, $3, $4, NULL, $5); free($1);} // NOT WORKING!
        |                   {;}
        ;
 
 cmd: WORD                  {$$ = subAlias($1);}
 
-arglist: WORD              {addToArglist($1); $$ = getArglistString();}
-       | arglist WORD      {addToArglist($2); $$ = getArglistString();}
+arglist: WORD              {addToArglist($1); free($1); $$ = getArglistString();}
+       | arglist WORD      {addToArglist($2); free($2); $$ = getArglistString();}
        |                   {$$ = NULL;}
        ;
 

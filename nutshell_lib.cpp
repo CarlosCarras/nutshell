@@ -3,6 +3,8 @@ extern "C" {
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <dirent.h>
+#include <fnmatch.h>
 }
 #include "nutshell_lib.h"
 #include <iostream>
@@ -133,7 +135,6 @@ void addToArglist(const char* word) {
 }
 
 char* getArglistString() {
-    cout << "check 0" << endl;
     size_t index = 0;
     for(const auto& arg : argsList) {
         for(const auto& c : arg) {
@@ -226,48 +227,56 @@ int isAlias(char* name) {
 
 /************************ Pattern Matching ***********************/
 
+char patternBuffer[1024];
+
 int isPattern(char* word) {
     string str(word);
     auto end = string::npos;
     return str.find("?") != end || str.find("*") != end;
 }
 
-char* subPattern(char* word) {
-    string filename = "test.txt";
-    string cmd1 = "ls " + string(word) + " > " + filename;
-    string cmd2 = "rm -f " + filename;
+char* subPattern(const char* pattern) {
+    DIR* d;
+    struct dirent* dir;
+    vector<string> fileList;
 
-    system(cmd1.c_str());
+    d = opendir((const char*)".");
+    if(d) {
+        while((dir = readdir(d)) != NULL) {
+            fileList.emplace_back(dir->d_name);
+        }
+        closedir(d);
+    }
 
-    /* put all contents of "filename" into std::string outstr. they should
-       already be sorted. */
-    ifstream t(filename);
-    string outstr((istreambuf_iterator<char>(t)),
-                   istreambuf_iterator<char>());
-    replace(outstr.begin(), outstr.end(), '\n', ' ');
+    string matchedWildcards;
+    for(const auto& f : fileList) {
+        if(fnmatch(pattern, f.c_str(), 0) == 0) {
+            // match with wildcard against file name
+            matchedWildcards.append(f);
+            matchedWildcards.append(" ");
+        }
+    }
 
-    system(cmd2.c_str());
-    cout << outstr << endl;
-    return word;
+    if(matchedWildcards.empty()) {
+        // no wilcard matches so just return original string
+        strcpy(patternBuffer, pattern);
+        return patternBuffer;
+    }
+    matchedWildcards.pop_back(); // remove last space
 
-    // char* out_str_raw = strdup(outstr.c_str());
-    // printf("%s\n", out_str_raw);
-    // return word;
+    // cout << '[' << matchedWildcards << ']' << endl;
+
+    if(matchedWildcards.length()+1 > 1024) {
+        cout << "Error: wildcards size larger than buffer" << endl;
+        strcpy(patternBuffer, pattern);
+        return patternBuffer;
+    }
+    
+    strcpy(patternBuffer, matchedWildcards.c_str());
+    return patternBuffer;
 }
 
 /************************ Print Functions ************************/
-
-void printd(const char* desc, const char* val) {
-    #ifdef DEBUG_NUTSHELL
-        cout << "\tDEBUG: " << desc << ' ' << val << endl;
-    #endif // DEBUG_NUTSHELL
-}
-
-void printd(const string& desc, const string& val) {
-    #ifdef DEBUG_NUTSHELL
-        cout << "\tDEBUG: " << desc << ' ' << val << endl;
-    #endif // DEBUG_NUTSHELL
-}
 
 void printerr() {
     string err = "error: ";

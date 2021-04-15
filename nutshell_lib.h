@@ -1,13 +1,21 @@
 #ifndef NUTSHELL_LIB_H
 #define NUTSHELL_LIB_H
 
-#include <climits>
 #include <string>
 #include <vector>
 
 /**************************** Defines ****************************/
 #define DEBUG_NUTSHELL
 
+#ifdef DEBUG_NUTSHELL
+#define CHECKPOINT(flag) cout << "check [" << flag << "]" << endl;
+#define printd(desc, val) cout << "\tDEBUG: " << desc << ' ' << val << endl;
+#else
+#define CHECKPOINT(flag) ;
+#define printd(desc, val) ;
+#endif // DEBUG_NUTSHELL
+
+#define PATH_MAX 4096
 #define MAX_WORD_LEN 256
 #define MAX_ARGLIST_LEN 1024
 
@@ -76,9 +84,7 @@ void setAlias(char* name, char* word);
 char* subAlias(char* name);
 int isAlias(char* name);
 int isPattern(char* word);
-char* subPattern(char* word);
-void printd(const char* desc, const char* val);
-void printd(const std::string& desc, const std::string& val);
+char* subPattern(const char* pattern);
 void printerr();
 /*************************** Functions ***************************/
 
