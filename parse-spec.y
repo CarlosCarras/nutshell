@@ -23,7 +23,7 @@
 
 %token CD BYE PWD SETENV UNSETENV PRINTENV ALIAS UNALIAS INVALIDALIAS ECHO_CMD
 %token INPIPE OUTPIPE
-%token END INVALID WHITESPACE
+%token END INVALID
 
 %token<string> WORD
 
@@ -35,13 +35,14 @@
 input: command END         {return 1;}
 
 command: CD                {cd_home();}
-       | CD WORD           {cd_cmd($2);} 
+       | CD WORD           {cd_cmd($2);}
        | PWD               {pwd_cmd();} 
        | ECHO_CMD WORD     {echo_cmd($2);}
        | BYE               {bye_cmd();} 
        | SETENV WORD WORD  {setenv_cmd($2, $3);}
        | UNSETENV WORD     {unsetenv_cmd($2);}
        | PRINTENV          {printenv_cmd();}
+       | PRINTENV OUTPIPE WORD  {pipeenv_cmd($3);}
        | ALIAS             {printalias_cmd();}
        | ALIAS WORD WORD   {setalias_cmd($2, $3);}
        | UNALIAS WORD      {unalias_cmd($2);}

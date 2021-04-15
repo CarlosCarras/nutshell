@@ -18,6 +18,7 @@ void envexp_cmd(char* var);
 void setenv_cmd(char* var, char* val);
 void unsetenv_cmd(char* var);
 void printenv_cmd();
+void pipeenv_cmd(char* file);
 
 /***************************** Alias *****************************/
 void setalias_cmd(char* name, char* val);
