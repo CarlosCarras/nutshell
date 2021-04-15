@@ -18,7 +18,7 @@ quote           ["]
 word            [^ \\<>|="&\t\n]+
 metachar        [\\<>|"&]
 newline         "\n"
-whitespace      [ \t\n]+
+whitespace      [ ]
 inpipe          "<"
 outpipe         ">"
 

@@ -23,7 +23,7 @@
 
 %token CD BYE PWD SETENV UNSETENV PRINTENV ALIAS UNALIAS INVALIDALIAS ECHO_CMD
 %token INPIPE OUTPIPE
-%token END INVALID
+%token END INVALID WHITESPACE
 
 %token<string> WORD
 
@@ -48,7 +48,7 @@ command: CD                {cd_home();}
        | INVALID           {invalid_arguments();}
        | INVALIDALIAS      {invalid_alias();}
        | cmd arglist inputfile outputfile background {handle_cmd($1, NULL, $2, $3, $4, NULL, $5);} // NOT WORKING!
-       |                   {unknown_command();}
+       |                   {;}
        ;
 
 cmd: WORD                  {$$ = subAlias($1);}

@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 using namespace std;
+int yyparse();
 
 int main() {
     setStartupVars();      // sets HOME, PATH variables
