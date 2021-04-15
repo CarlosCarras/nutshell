@@ -173,17 +173,14 @@ void invalid_arguments() {
     cout << "error: invalid arguments" << endl;
 }
 
-void handle_cmd(const char* command, 
-                const char* options, 
+void handle_cmd(
+                const char* command,
                 const char* arguments,  
                 const char* standardin,
                 const char* stdandardout,
                 const char* stdandarderr,
                 int background
 ) {
-
-    // cout << "CMD: " << command << endl;
-    // cout << "OPTIONS: " << options << endl;
     cout << "CMD=[" << (command == NULL ? "NULL" : command) << "] ";
     cout << "ARGS=[" << (arguments == NULL ? "NULL" : arguments) << "] ";
     cout << "INFILE=[" << (standardin == NULL ? "NULL" : standardin) << "] ";
@@ -192,12 +189,11 @@ void handle_cmd(const char* command,
 
     cmdTable_t cmd = {
         .command = command,
-        .options = options,
         .args = arguments,
         .standardin = standardin,
         .standardout = stdandardout,
         .standarderr = stdandarderr,
-        .background = background
+        .background = (bool)background
     };
 
     interpret_cmd(cmd);

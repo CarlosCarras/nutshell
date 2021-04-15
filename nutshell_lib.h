@@ -39,19 +39,13 @@ typedef struct aTable {
     std::vector<std::string> word;
 } aTable_t;
 
-typedef struct keyValPair {
-    std::string key;
-    std::string val;
-} keyValPair_t;
-
 typedef struct cmdTable {
     const char* command;
-    const char* options; 
     const char* args; 
     const char* standardin;
     const char* standardout;
     const char* standarderr;
-    int background;
+    bool background;
 } cmdTable_t;
 /**************************** Data Types *************************/
 

@@ -30,8 +30,7 @@ void unknown_command();
 void invalid_alias();
 void invalid_arguments();
 
-void handle_cmd(const char* command, 
-                const char* options, 
+void handle_cmd(const char* command,
                 const char* arguments,  
                 const char* standardin,
                 const char* stdandardout,
