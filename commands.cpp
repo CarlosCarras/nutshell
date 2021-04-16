@@ -44,16 +44,9 @@ void setenv_cmd(char* var, char* word) {
         return;
     }
 
-    if(any_of(varTable.var.begin(), varTable.var.end(), [var](const string& s){ return s.compare(var) == 0; })) {
-        auto it = find(varTable.word.begin(), varTable.word.end(), word);
-        
-        if(it != varTable.word.end()) {
-            /* if both the variable and the word already exist */
-            return;
-        }
-
-        /* redefine the variable if variable exists */
-        varTable.word.emplace(it, word);
+    if(existsInTable(varTable.var, var)) {
+        auto index = getTableIndex(varTable.var, var);
+        varTable.word.at(index) = word;
         return;
     }
 
@@ -193,11 +186,15 @@ void handle_cmd(
                 const char* stdandarderr,
                 int background
 ) {
+#ifdef DEBUG_NUTSHELL
     cout << "CMD=[" << (command == NULL ? "NULL" : command) << "] ";
     cout << "ARGS=[" << (arguments == NULL ? "NULL" : arguments) << "] ";
     cout << "INFILE=[" << (standardin == NULL ? "NULL" : standardin) << "] ";
-    cout << "OUTFILE=[" << (stdandardout == NULL ? "NULL" : stdandardout) << "]";
+    cout << "OUTFILE=[" << (stdandardout == NULL ? "NULL" : stdandardout) << "] ";
+    cout << "ERRFILE=[" << (stdandarderr == NULL ? "NULL" : stdandarderr) << "] ";
+    cout << "BACKGROUND=[" << background << "] ";
     cout << endl;
+#endif // DEBUG_NUTSHELL
 
     cmdTable_t cmd = {
         .command = command,
