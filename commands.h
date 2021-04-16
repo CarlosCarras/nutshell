@@ -18,13 +18,14 @@ void envexp_cmd(char* var);
 void setenv_cmd(char* var, char* val);
 void unsetenv_cmd(char* var);
 void printenv_cmd();
-void pipeenv_cmd(char* file);
+void pipeenv_cmd(char* file, int append);
 
 /***************************** Alias *****************************/
 void setalias_cmd(char* name, char* val);
 void unalias_cmd(char* name);
 std::string getAliasString();
 void printalias_cmd();
+void pipealias_cmd(char* file, int append);
 
 /************************* Other Command *************************/
 void unknown_command();

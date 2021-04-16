@@ -17,7 +17,7 @@ int main() {
         cout << BLUE "nutshell" RESET ":" GREEN << cwd << WHITE ">> " RESET;
         
         yyparse();
-        usleep(2000);       // delay to fix race conditions
+        usleep(5000);       // delay to fix race conditions
     }
     return 0;
 }

@@ -19,13 +19,15 @@ word            [^ \\<>|="&\t\n]+
 metachar        [\\<>|"&]
 newline         "\n"
 whitespace      [ \t]
-stdin           [<]
-stdout1         >[ \n\t]
-stdout2         >>[ \n\t]
+stdin           <+
+stdout1         >+
+stdout2         >>+
 stderrf         2>[^ "&\t\n]+
-stderro         2>&1
+stderro         2>&1+
 
 %%
+
+<<EOF>>         {return FILEEND;}
 
 ^cd             {return CD;}
 ^pwd            {return PWD;}
@@ -76,6 +78,17 @@ stderro         2>&1
 <STRING>\n       {return INVALID;}
 <STRING>.        {*s++ = *yytext;}
 
+{stdin}         {return STDIN;}
+{stdout2}       {return STDOUT2;}
+{stdout1}       {return STDOUT1;}
+{stderro}       {return STDERRO;}
+{stderrf}       {
+                    char *yycopy = strdup(yytext);
+                    memmove(yycopy, yycopy+2, strlen(yycopy));
+                    yylval.string=strdup(yycopy);
+                    free(yycopy);
+                    return STDERRF;
+                }
 {newline}       {return END;}
 
 {word}          {

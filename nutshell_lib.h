@@ -59,6 +59,7 @@ extern char args[MAX_ARGLIST_LEN];
 
 /******************** Global Functions ***************************/
 int run_cmd(char* const args[]);
+int executeCommand(char* args[], const char* fileStdIn, int stdIn, const char* fileStdOut, int stdOut, const char* fileStdErr, int stdErr, bool background);
 int write_to_file(const char* file, const char* data, size_t len, int append);
 int redir_stdout(const char* file, char* const args[], int append);
 

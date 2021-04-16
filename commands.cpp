@@ -27,7 +27,7 @@ void echo_cmd(char* val) {
 }
 
 void bye_cmd() {
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 /********************* Environment Variables *********************/
@@ -98,8 +98,9 @@ void printenv_cmd() {
     cout << getEnvString();
 }
 
-void pipeenv_cmd(char* file) {
-
+void pipeenv_cmd(char* file, int append) {
+    string text = getEnvString();
+    write_to_file(file, text.c_str(), text.length(), (bool)append);
 }
 
 /***************************** Alias *****************************/
@@ -163,6 +164,11 @@ string getAliasString() {
 
 void printalias_cmd() {
     cout << getAliasString();
+}
+
+void pipealias_cmd(char* file, int append) {
+    string text = getAliasString();
+    write_to_file(file, text.c_str(), text.length(), (bool)append);
 }
 
 /************************* Other Command *************************/
