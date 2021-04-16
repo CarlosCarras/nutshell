@@ -86,6 +86,7 @@ int isPattern(char* word);
 char* subPattern(const char* pattern);
 int requiresTilde(char* word);
 char* subTilde(const char* word);
+char* handle_esc(char* word);
 void printerr();
 
 const std::string& getPath();

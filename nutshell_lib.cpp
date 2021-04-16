@@ -14,6 +14,7 @@ extern "C" {
 #include <fstream>
 #include <streambuf>
 #include <sstream>
+#include <iterator>
 
 using namespace std;
 
@@ -334,7 +335,7 @@ char* subPattern(const char* pattern) {
     // cout << '[' << matchedWildcards << ']' << endl;
 
     if(matchedWildcards.length()+1 > 1024) {
-        cout << "Error: wildcards size larger than buffer" << endl;
+        cout << "error: wildcards size larger than buffer" << endl;
         strcpy(patternBuffer, pattern);
         return patternBuffer;
     }
@@ -358,14 +359,14 @@ char* subTilde(const char* word) {
     struct passwd *p;
 
     std::size_t found = str.find('/');
-    user = str.substr(1,found);
+    if (found == string::npos) user = str.substr(1,found);
+    else user = str.substr(1,found-1);
     str.erase(0,found);
 
     if (user.empty()) {
         str = string(subVar((char*)"HOME")) + str;
     } else {
         if ((p = getpwnam(user.c_str())) == NULL) {
-            //cout << "error: unable to access the specified user's information.\n" << endl;
             str.clear();
         } else {
             str = p->pw_dir + str; 
@@ -377,6 +378,27 @@ char* subTilde(const char* word) {
 }
 
 /************************ Tilde Expansion ************************/
+
+/********************** Filename Completion **********************/
+char subbedEscapedExpansion[1024];
+
+char* handle_esc(char* word) {
+    string pattern = string(word) + "*";
+    char* candidates = subPattern(pattern.c_str());
+
+    istringstream iss(candidates);
+    vector<string> results(istream_iterator<string>{iss},
+                           istream_iterator<string>());
+
+    if (results.size() == 1) {
+        strcpy(subbedEscapedExpansion, results[0].c_str());
+        return subbedEscapedExpansion;
+    }
+    
+    return word;
+}
+
+/********************** Filename Completion **********************/
 
 /************************ Print Functions ************************/
 

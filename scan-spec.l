@@ -15,7 +15,8 @@ char *s;
 
 envvar          \$\{(.*?)\}
 quote           ["]
-word            [^ \\<>|="&\t\n]+
+word            [^ \x1B\\<>|="&\t\n]+
+escapedword     [^ \x1B\\<>|="&\t\n]+[\x1B]
 metachar        [\\<>|"&]
 newline         "\n"
 whitespace      [ \t]
@@ -92,6 +93,17 @@ stderro         2>&1+
 
 {newline}       {return END;}
 
+{escapedword}   {
+                    yytext[strlen(yytext)-1] = '\0';            // eliminate last char, '}'
+                    char* result = strdup(handle_esc(yytext));
+
+                    for (int i = strlen(result)-1; i >= 0; --i) {
+                            unput(result[i]);
+                    }
+                    
+                    free(result);
+                }
+
 {word}          {
                     char *yycopy = strdup(yytext);
                     char* postTildeSub;
@@ -119,8 +131,8 @@ stderro         2>&1+
                     return WORD;
                 }
 
-{metachar}      {return (int)yytext[0];}
 {whitespace}    {;}
+{metachar}      {return (int)yytext[0];}
 .               {return INVALID;}
 
 %%

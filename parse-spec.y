@@ -32,7 +32,7 @@
 
 %%
 
-input: command END              {return 1;}
+input: command END            {return 1;}
 
 command: FILEEND                {bye_cmd();}
        | CD                     {cd_home();}
