@@ -109,9 +109,13 @@ int executeCommand(char* args[], const char* fileStdIn, int stdIn, const char* f
                 break;
             }
             case 2: {
-                int fdErr = open(fileStdOut, O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
-                write(fdErr, err.c_str(), err.length());
-                close(fdErr);
+                if(stdOut > 0) {
+                    int fdErr = open(fileStdOut, O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
+                    write(fdErr, err.c_str(), err.length());
+                    close(fdErr);
+                } else {
+                    cout << err;
+                }
                 break;
             }
         }
@@ -176,113 +180,6 @@ int write_to_file(const char* file, const char* data, size_t len, int append) {
 
     return 0;
 }
-
-// int redir_stdout(const char* file, char* const args[], int append) {
-//     pid_t pid = fork();
-//     if(pid == -1) {
-//         return 1;
-//     }
-
-//     if(pid == 0) {
-//         int flags = O_RDWR | (append ? O_APPEND : O_CREAT);
-//         mode_t mode = S_IRUSR | S_IWUSR;
-
-//         int fd = open(file, flags, mode);
-
-//         dup2(fd, STDOUT_FILENO);
-
-//         close(fd);
-
-//         string path = "/bin/";
-//         path.append(args[0]);
-
-//         execv(path.c_str(), args);
-//         return -1;
-//     } else {
-//         int status;
-//         if(waitpid(pid, &status, 0) == -1) {
-//             return 1;
-//         }
-//     }
-
-//     return 0;
-// }
-
-// int run_cmd(char* cmd) {
-//     cout << "command: " << cmd << endl;
-//     int fd[2];
-//     if(pipe(fd) == -1) {
-//         cout << "error creating pipe" << endl;
-//         return 1;
-//     }
-//     auto pid = fork();
-//     if(pid == -1) {
-//         cout << "error creating child process" << endl;
-//         return 1;
-//     }
-
-//     if(pid == 0) {
-//         // child process
-//         cout << "child" << endl;
-//         dup2(fd[1], STDOUT_FILENO);
-//         close(fd[0]);
-//         close(fd[1]);
-
-//         string temp(cmd);
-//         auto numArgs = count(temp.begin(), temp.end(), ' ') + 1;
-//         char* argv[numArgs+1];
-
-//         size_t found = 0, index = 0;
-//         while(found != string::npos) {
-//             argv[index++] = &cmd[found];
-//             found = temp.find(" ");
-//         }
-//         argv[numArgs] = (char*)NULL;
-
-//         cout << "argv[]: ->";
-//         for(size_t i = 0; i < index; ++i) {
-//             cout << argv[i] << "->";
-//         }
-//         cout << endl;
-
-//         string path = "/bin/" + string(argv[0]);
-
-//         // vector<string> args;
-//         // string cmd_string(cmd);
-//         // stringstream ss(cmd_string);
-//         // string token;
-//         // while(getline(ss, token, ' ')) {
-//         //     args.push_back(token);
-//         // }
-
-//         // string path = "/bin/";
-//         // path.append(args.at(0));
-
-//         // char* argv[args.size()+1];
-//         // for(size_t i = 0; i < args.size(); ++i) {
-//         //     argv[i] = (char*)(args[i].c_str());
-//         // }
-//         // argv[args.size()] = (char*)NULL;
-
-//         int childRetCode = execv(path.c_str(), argv);
-
-//         if(childRetCode == -1) {
-//             // error
-//             cout << "error executing command" << endl;
-//             return -1;
-//         }
-//     } else {
-//         close(fd[1]);
-//         char output[1024];
-//         auto size = read(fd[0], output, sizeof(output)*sizeof(*output));
-
-//         output[size*sizeof(*output)] = '\0';
-
-//         cout << "out: " << output << endl;
-//         while(wait(nullptr) != pid);
-//     }
-//     return 0;
-// }
 
 /**************************** Arglist *****************************/
 

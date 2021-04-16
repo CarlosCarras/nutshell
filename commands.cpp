@@ -12,7 +12,6 @@ void cd_home() {
 }
 
 void cd_cmd(char* dest) {
-    cout << "DEST: " << (dest == NULL ? "NULL" : dest) << endl;
     int status = chdir(dest);
     if (status < 0) { printerr(); }
 }
@@ -183,7 +182,9 @@ void handle_cmd(
                 const char* arguments,  
                 const char* standardin,
                 const char* stdandardout,
+                int append_n_create,
                 const char* stdandarderr,
+                int stdout_n_file,
                 int background
 ) {
 #ifdef DEBUG_NUTSHELL
@@ -202,7 +203,10 @@ void handle_cmd(
         .standardin = standardin,
         .standardout = stdandardout,
         .standarderr = stdandarderr,
-        .background = (bool)background
+        .background = (bool)background,
+        .inFlag = (int)(standardin != NULL),
+        .outFlag = (int)(stdandardout != NULL ? (append_n_create+1) : 0),
+        .errFlag = (int)(stdout_n_file ? 2 : stdandarderr != NULL)
     };
 
     interpret_cmd(cmd);
@@ -223,7 +227,20 @@ void interpret_cmd(const cmdTable_t& cmd) {
     string token;
     vector<string> cmdVector;
     while(getline(iss, token, ' ')) {
-        cmdVector.emplace_back(token);
+        if(isPattern((char*)token.c_str())) {
+            string wildcardList = string(subPattern(token.c_str()));
+
+            istringstream issNested(wildcardList);
+            string tokenNested;
+            int additionalArgs = -1;
+            while(getline(issNested, tokenNested, ' ')) {
+                cmdVector.emplace_back(tokenNested);
+                ++additionalArgs;
+            }
+            numQuotedArgs += additionalArgs;
+        } else {
+            cmdVector.emplace_back(token);
+        }
     }
 
     char cmdCopy[64];
@@ -289,9 +306,11 @@ void interpret_cmd(const cmdTable_t& cmd) {
     }
 #endif // DEBUG_NUTSHELL
 
-    int status = run_cmd(args);
+    executeCommand(args, cmd.standardin, cmd.inFlag, cmd.standardout, cmd.outFlag, cmd.standarderr, cmd.errFlag, cmd.background);
 
-    if(status == -1) { unknown_command(); }
+    // int status = run_cmd(args);
+
+    // if(status == -1) { unknown_command(); }
 
     // auto bufferLength = strlen(cmd.command);
     // if(cmd.args != NULL) {

@@ -5,7 +5,7 @@
 #include <vector>
 
 /**************************** Defines ****************************/
-#define DEBUG_NUTSHELL
+// #define DEBUG_NUTSHELL
 
 #ifdef DEBUG_NUTSHELL
 #define CHECKPOINT(flag) cout << "check [" << flag << "]" << endl;
@@ -46,6 +46,9 @@ typedef struct cmdTable {
     const char* standardout;
     const char* standarderr;
     bool background;
+    int inFlag;
+    int outFlag;
+    int errFlag;
 } cmdTable_t;
 /**************************** Data Types *************************/
 

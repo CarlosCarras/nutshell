@@ -27,7 +27,7 @@
 
 %token<string> WORD
 
-%type<string> cmd arglist inputfile outputfile errfile
+%type<string> cmd arglist inputfile outputfile1 outputfile2 errfile
 %type<boolean> background
 
 %%
@@ -52,7 +52,10 @@ command: FILEEND               {bye_cmd();}
        | UNALIAS WORD      {unalias_cmd($2);}
        | INVALID           {invalid_arguments();}
        | INVALIDALIAS      {invalid_alias();}
-       | cmd arglist inputfile outputfile errfile background {handle_cmd($1, $2, $3, $4, $5, $6);} // NOT WORKING!
+       | cmd arglist inputfile outputfile1 errfile background {handle_cmd($1, $2, $3, $4, 0, $5, 0, $6);}
+       | cmd arglist inputfile outputfile2 errfile background {handle_cmd($1, $2, $3, $4, 1, $5, 0, $6);}
+       | cmd arglist inputfile outputfile1 STDERRO background {handle_cmd($1, $2, $3, $4, 0, NULL, 1, $6);}
+       | cmd arglist inputfile outputfile2 STDERRO background {handle_cmd($1, $2, $3, $4, 1, NULL, 1, $6);}
        |                   {;}
        ;
 
@@ -67,8 +70,12 @@ inputfile: STDIN WORD      {$$ = $2;}
        |                   {$$ = NULL;}
        ;
 
-outputfile: STDOUT1 WORD   {$$ = $2;}
-       |                   {$$ = NULL;} 
+outputfile1: STDOUT1 WORD   {$$ = $2;}
+       |                    {$$ = NULL;} 
+       ;
+
+outputfile2: STDOUT2 WORD   {$$ = $2;}
+       |                    {$$ = NULL;} 
        ;
 
 errfile: STDERRF            {;}
