@@ -342,10 +342,8 @@ char* subPattern(const char* pattern) {
 /************************ Tilde Expansion ************************/
 char subbedTildeExpansion[1024];
 
-int requiresTilde(char* word) {
-    string str(word);
-    if (str.at(0) == '~') return 1;
-    return 0;
+int requiresTildeExp(char* word) {
+    return word[0] == '~';
 }
 
 char* subTilde(const char* word) {
@@ -378,18 +376,51 @@ char* subTilde(const char* word) {
 char subbedEscapedExpansion[1024];
 
 char* handle_esc(char* word) {
-    string pattern = string(word) + "*";
-    char* candidates = subPattern(pattern.c_str());
+    if (requiresTildeExp(word)) {
+        vector<string> candidateList;
+        fstream fs;
 
-    istringstream iss(candidates);
-    vector<string> results(istream_iterator<string>{iss},
-                           istream_iterator<string>());
+        string incoming(word);
+        size_t endOfUser = incoming.find("/");
+        if (endOfUser == string::npos) endOfUser = incoming.length();
+        string potentialUser = incoming.substr(1, endOfUser-1);  // eliminating '~' from begining of word
+        
+        fs.open("/etc/passwd",ios::in);
+        if (fs.is_open()) {
+            string line, user, home;
+            struct passwd *p;
+            
+            while(getline(fs, line)) {
+                user = line.substr(0, line.find(":"));
+                if (user.find(potentialUser) == 0) {     // if the pattern matches the start of one of the users...
+                    p = getpwnam(user.c_str()); // get the user's home directory
+                    candidateList.emplace_back(p->pw_dir);  // save the home directory 
+                }
+            }
+            fs.close();
 
-    if (results.size() == 1) {
-        strcpy(subbedEscapedExpansion, results[0].c_str());
-        return subbedEscapedExpansion;
+            if (candidateList.size() == 1) {    // if the result is not ambiguous...
+                strcpy(subbedEscapedExpansion, candidateList[0].c_str());
+                strcat(subbedEscapedExpansion, incoming.substr(endOfUser).c_str());
+                return subbedEscapedExpansion;
+            }
+        } else {
+            cout << "error: unable to open /etc/passwd" << endl;
+        }
+
+    } else {
+        string pattern = string(word) + "*";
+        char* candidates = subPattern(pattern.c_str());
+
+        istringstream iss(candidates);
+        vector<string> candidateList(istream_iterator<string>{iss},
+                                     istream_iterator<string>());
+
+        if (candidateList.size() == 1) {
+            strcpy(subbedEscapedExpansion, candidateList[0].c_str());
+            return subbedEscapedExpansion;
+        }
     }
-    
     return word;
 }
 

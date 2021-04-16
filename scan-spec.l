@@ -100,7 +100,7 @@ stderro         2>&1+
                     for (int i = strlen(result)-1; i >= 0; --i) {
                             unput(result[i]);
                     }
-                    
+
                     free(result);
                 }
 
@@ -113,7 +113,7 @@ stderro         2>&1+
                         return INVALID;
                     }
 
-                    if (requiresTilde(yycopy)) {
+                    if (requiresTildeExp(yycopy)) {
                         postTildeSub=strdup(subTilde(yycopy));
                         if (postTildeSub[0] == '\0') {};
                     } else {
