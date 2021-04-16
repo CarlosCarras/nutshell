@@ -32,43 +32,44 @@
 
 %%
 
-input: command END         {return 1;}
+input: command END              {return 1;}
+       |                        {return 1;}
 
-command: CD                {cd_home();}
-       | CD WORD           {cd_cmd($2);}
-       | PWD               {pwd_cmd();} 
-       | ECHO_CMD WORD     {echo_cmd($2);}
-       | BYE               {bye_cmd();} 
-       | SETENV WORD WORD  {setenv_cmd($2, $3);}
-       | UNSETENV WORD     {unsetenv_cmd($2);}
-       | PRINTENV          {printenv_cmd();}
+command: CD                     {cd_home();}
+       | CD WORD                {cd_cmd($2);}
+       | PWD                    {pwd_cmd();} 
+       | ECHO_CMD WORD          {echo_cmd($2);}
+       | BYE                    {bye_cmd();} 
+       | SETENV WORD WORD       {setenv_cmd($2, $3);}
+       | UNSETENV WORD          {unsetenv_cmd($2);}
+       | PRINTENV               {printenv_cmd();}
        | PRINTENV OUTPIPE WORD  {pipeenv_cmd($3);}
-       | ALIAS             {printalias_cmd();}
-       | ALIAS WORD WORD   {setalias_cmd($2, $3);}
-       | UNALIAS WORD      {unalias_cmd($2);}
-       | INVALID           {invalid_arguments();}
-       | INVALIDALIAS      {invalid_alias();}
+       | ALIAS                  {printalias_cmd();}
+       | ALIAS WORD WORD        {setalias_cmd($2, $3);}
+       | UNALIAS WORD           {unalias_cmd($2);}
+       | INVALID                {invalid_arguments();}
+       | INVALIDALIAS           {invalid_alias();}
        | cmd arglist inputfile outputfile background {handle_cmd($1, NULL, $2, $3, $4, NULL, $5);} // NOT WORKING!
-       |                   {;}
+       |                        {;}
        ;
 
-cmd: WORD                  {$$ = subAlias($1);}
+cmd: WORD                       {$$ = subAlias($1);}
 
-arglist: WORD              {addToArglist($1); $$ = getArglistString();}
-       | arglist WORD      {addToArglist($2); $$ = getArglistString();}
-       |                   {$$ = NULL;}
+arglist: WORD                   {addToArglist($1); $$ = getArglistString();}
+       | arglist WORD           {addToArglist($2); $$ = getArglistString();}
+       |                        {$$ = NULL;}
        ;
 
-inputfile: INPIPE WORD     {$$ = $2;}
-       |                   {$$ = NULL;}
+inputfile: INPIPE WORD          {$$ = $2;}
+       |                        {$$ = NULL;}
        ;
 
-outputfile:OUTPIPE WORD    {$$ = $2;}
-       |                   {$$ = NULL;} 
+outputfile:OUTPIPE WORD         {$$ = $2;}
+       |                        {$$ = NULL;} 
        ;
 
-background: '&'            {$$ = 1;}
-       |                   {$$ = 0;} 
+background: '&'                 {$$ = 1;}
+       |                        {$$ = 0;} 
        ;
 
 %%
