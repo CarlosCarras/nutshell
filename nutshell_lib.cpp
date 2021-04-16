@@ -59,14 +59,9 @@ int executeCommand(char* args[], const char* fileStdIn, int stdIn, const char* f
 
     if(pid == 0) {
         if(stdIn > 0) {
-            char* const* tempArg = args;
-            size_t argsSize = 0;
-            do {
-                ++argsSize;
-            } while(*tempArg++);
-
-            args[argsSize-1] = (char*)fileStdIn;
-            args[argsSize] = (char*)NULL;
+            int fdIn = open(fileStdIn, O_RDONLY);
+            dup2(fdIn, STDIN_FILENO);
+            close(fdIn);
         }
 
         if(stdOut > 0) {
