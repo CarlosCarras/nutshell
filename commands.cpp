@@ -12,7 +12,6 @@ void cd_home() {
 }
 
 void cd_cmd(char* dest) {
-    cout << "DEST: " << (dest == NULL ? "NULL" : dest) << endl;
     int status = chdir(dest);
     if (status < 0) { printerr(); }
 }
@@ -23,22 +22,11 @@ void pwd_cmd() {
 }
 
 void echo_cmd(char* val) {
-    string str(val);
-    // if(str.at(0) == '$' && str.at(1) == '{' && str.at(str.length()-1) == '}') {
-    //     // check for env var
-    //     string envVar = str.substr(2, str.length()-3);
-    //     if(existsInTable(varTable.var, envVar)) {
-    //         // print out env var value
-    //         cout << varTable.word.at(getTableIndex(varTable.var, envVar)) << endl;
-    //         return;
-    //     }
-    // }
-
-    cout << str << endl;
+    cout << val << endl;
 }
 
 void bye_cmd() {
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 /********************* Environment Variables *********************/
@@ -55,16 +43,9 @@ void setenv_cmd(char* var, char* word) {
         return;
     }
 
-    if(any_of(varTable.var.begin(), varTable.var.end(), [var](const string& s){ return s.compare(var) == 0; })) {
-        auto it = find(varTable.word.begin(), varTable.word.end(), word);
-        
-        if(it != varTable.word.end()) {
-            /* if both the variable and the word already exist */
-            return;
-        }
-
-        /* redefine the variable if variable exists */
-        varTable.word.emplace(it, word);
+    if(existsInTable(varTable.var, var)) {
+        auto index = getTableIndex(varTable.var, var);
+        varTable.word.at(index) = word;
         return;
     }
 
@@ -109,8 +90,9 @@ void printenv_cmd() {
     cout << getEnvString();
 }
 
-void pipeenv_cmd(char* file) {
-
+void pipeenv_cmd(char* file, int append) {
+    string text = getEnvString();
+    write_to_file(file, text.c_str(), text.length(), (bool)append);
 }
 
 /***************************** Alias *****************************/
@@ -158,16 +140,27 @@ void unalias_cmd(char* name) {
     removeTableIndex(aliasTable.word, index);
 }
 
-void printalias_cmd() {
+string getAliasString() {
     auto nameTableSize = aliasTable.name.size();
     auto wordTableSize = aliasTable.word.size();
     if(nameTableSize != wordTableSize) {
         printd("ERROR: name table and word table unequal sizes", to_string(nameTableSize) + " != " + to_string(wordTableSize));
     }
 
+    string str;
     for(size_t i = 0; i < nameTableSize; ++i) {
-        cout << aliasTable.name.at(i) << "=" << aliasTable.word.at(i) << endl;
+        str.append(aliasTable.name.at(i) + "=" + aliasTable.word.at(i) + "\n");
     }
+    return str;
+}
+
+void printalias_cmd() {
+    cout << getAliasString();
+}
+
+void pipealias_cmd(char* file, int append) {
+    string text = getAliasString();
+    write_to_file(file, text.c_str(), text.length(), (bool)append);
 }
 
 /************************* Other Command *************************/
@@ -184,30 +177,36 @@ void invalid_arguments() {
     cout << "error: invalid arguments" << endl;
 }
 
-void handle_cmd(const char* command, 
-                const char* options, 
+void handle_cmd(
+                const char* command,
                 const char* arguments,  
                 const char* standardin,
                 const char* stdandardout,
+                int append_n_create,
                 const char* stdandarderr,
+                int stdout_n_file,
                 int background
 ) {
-
-    // cout << "CMD: " << command << endl;
-    // cout << "OPTIONS: " << options << endl;
-    cout << "CMD = [" << (command == NULL ? "NULL" : command) << "]" << endl;
-    cout << "ARGS = [" << (arguments == NULL ? "NULL" : arguments) << "]" << endl;
-    cout << "INFILE = [" << (standardin == NULL ? "NULL" : standardin) << "]" << endl;
-    cout << "OUTFILE = [" << (stdandardout == NULL ? "NULL" : stdandardout) << "]" << endl;
+#ifdef DEBUG_NUTSHELL
+    cout << "CMD=[" << (command == NULL ? "NULL" : command) << "] ";
+    cout << "ARGS=[" << (arguments == NULL ? "NULL" : arguments) << "] ";
+    cout << "INFILE=[" << (standardin == NULL ? "NULL" : standardin) << "] ";
+    cout << "OUTFILE=[" << (stdandardout == NULL ? "NULL" : stdandardout) << "] ";
+    cout << "ERRFILE=[" << (stdandarderr == NULL ? "NULL" : stdandarderr) << "] ";
+    cout << "BACKGROUND=[" << background << "] ";
+    cout << endl;
+#endif // DEBUG_NUTSHELL
 
     cmdTable_t cmd = {
         .command = command,
-        .options = options,
         .args = arguments,
         .standardin = standardin,
         .standardout = stdandardout,
         .standarderr = stdandarderr,
-        .background = background
+        .background = (bool)background,
+        .inFlag = (int)(standardin != NULL),
+        .outFlag = (int)(stdandardout != NULL ? (append_n_create+1) : 0),
+        .errFlag = (int)(stdout_n_file ? 2 : stdandarderr != NULL)
     };
 
     interpret_cmd(cmd);
@@ -228,33 +227,39 @@ void interpret_cmd(const cmdTable_t& cmd) {
     string token;
     vector<string> cmdVector;
     while(getline(iss, token, ' ')) {
-        cmdVector.emplace_back(token);
+        if(isPattern((char*)token.c_str())) {
+            string wildcardList = string(subPattern(token.c_str()));
+
+            istringstream issNested(wildcardList);
+            string tokenNested;
+            int additionalArgs = -1;
+            while(getline(issNested, tokenNested, ' ')) {
+                cmdVector.emplace_back(tokenNested);
+                ++additionalArgs;
+            }
+            numQuotedArgs += additionalArgs;
+        } else {
+            cmdVector.emplace_back(token);
+        }
     }
 
-    char* cmdCopy;
-    char* quotedArgsCopy;
+    char cmdCopy[64];
+    char argsCopy[512];
+
+    size_t argsCopyIndex = 0;
+
     if(numQuotedArgs > 0) {
-        cmdCopy = new char(cmdVector.at(0).length() + 1);
         strcpy(cmdCopy, cmdVector.at(0).c_str());
 
         cmdVector.erase(cmdVector.begin());
 
-        size_t quotedArgsCopySize = 0;
-        for(size_t i = 0; i < cmdVector.size(); ++i) {
-            quotedArgsCopySize += cmdVector.at(i).length() + 1;
-        }
-
-        quotedArgsCopy = new char(quotedArgsCopySize);
-
-        size_t index = 0;
         for(const auto& arg : cmdVector) {
             for(char c : arg) {
-                quotedArgsCopy[index++] = c;
+                argsCopy[argsCopyIndex++] = c;
             }
-            quotedArgsCopy[index++] = '\0';
+            argsCopy[argsCopyIndex++] = '\0';
         }
     } else {
-        cmdCopy = new char(commandString.length() + 1);
         strcpy(cmdCopy, commandString.c_str());
     }
 
@@ -275,43 +280,37 @@ void interpret_cmd(const cmdTable_t& cmd) {
 
     size_t pos = 0;
     for(int i = 0; i < numQuotedArgs; ++i) {
-        args[i+1] = &quotedArgsCopy[pos];
+        args[i+1] = &argsCopy[pos];
         pos += cmdVector.at(i).length() + 1;
     }
 
-    char* argsCopy;
     if(hasArgs) {
         auto argsStrLen = strlen(cmd.args);
-        argsCopy = new char(argsStrLen+1);
 
         for(size_t i = 0; i < argsStrLen; ++i) {
             char original = cmd.args[i];
-            argsCopy[i] = original == ' ' ? '\0' : original;
+            argsCopy[argsCopyIndex++] = original == ' ' ? '\0' : original;
         }
-        argsCopy[argsStrLen] = '\0';
+        argsCopy[argsCopyIndex] = '\0';
   
         pos = 0;
-        for(int i = 0; i < numArgs; ++i) {
-            args[i+1+numQuotedArgs] = &argsCopy[pos];
+        for(int i = 0; i < numArgs + numQuotedArgs; ++i) {
+            args[i+1] = &argsCopy[pos];
             pos = argumentsString.find(' ', pos+1) + 1;
         }
     }
 
+#ifdef DEBUG_NUTSHELL
     for(size_t i = 0; i < argsSize; ++i) {
         cout << i << " = [" << (args[i] == (char*)NULL ? "NULL" : args[i]) << "]" << endl;
     }
+#endif // DEBUG_NUTSHELL
 
-    int status = run_cmd(args);
+    executeCommand(args, cmd.standardin, cmd.inFlag, cmd.standardout, cmd.outFlag, cmd.standarderr, cmd.errFlag, cmd.background);
 
-    delete[] cmdCopy;
-    if(hasArgs) {
-        delete[] argsCopy;
-    }
-    if(numQuotedArgs > 0) {
-        delete[] quotedArgsCopy;
-    }
+    // int status = run_cmd(args);
 
-    if(status == -1) { unknown_command(); }
+    // if(status == -1) { unknown_command(); }
 
     // auto bufferLength = strlen(cmd.command);
     // if(cmd.args != NULL) {

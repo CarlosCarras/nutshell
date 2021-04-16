@@ -1,13 +1,21 @@
 #ifndef NUTSHELL_LIB_H
 #define NUTSHELL_LIB_H
 
-#include <climits>
 #include <string>
 #include <vector>
 
 /**************************** Defines ****************************/
-#define DEBUG_NUTSHELL
+// #define DEBUG_NUTSHELL
 
+#ifdef DEBUG_NUTSHELL
+#define CHECKPOINT(flag) cout << "check [" << flag << "]" << endl;
+#define printd(desc, val) cout << "\tDEBUG: " << desc << ' ' << val << endl;
+#else
+#define CHECKPOINT(flag) ;
+#define printd(desc, val) ;
+#endif // DEBUG_NUTSHELL
+
+#define PATH_MAX 4096
 #define MAX_WORD_LEN 256
 #define MAX_ARGLIST_LEN 1024
 
@@ -31,19 +39,16 @@ typedef struct aTable {
     std::vector<std::string> word;
 } aTable_t;
 
-typedef struct keyValPair {
-    std::string key;
-    std::string val;
-} keyValPair_t;
-
 typedef struct cmdTable {
     const char* command;
-    const char* options; 
     const char* args; 
     const char* standardin;
     const char* standardout;
     const char* standarderr;
-    int background;
+    bool background;
+    int inFlag;
+    int outFlag;
+    int errFlag;
 } cmdTable_t;
 /**************************** Data Types *************************/
 
@@ -57,7 +62,9 @@ extern char args[MAX_ARGLIST_LEN];
 
 /******************** Global Functions ***************************/
 int run_cmd(char* const args[]);
-int run_cmd(char* cmd);
+int executeCommand(char* args[], const char* fileStdIn, int stdIn, const char* fileStdOut, int stdOut, const char* fileStdErr, int stdErr, bool background);
+int write_to_file(const char* file, const char* data, size_t len, int append);
+int redir_stdout(const char* file, char* const args[], int append);
 
 void restart();
 void addToArglist(const char* word);
@@ -76,10 +83,11 @@ void setAlias(char* name, char* word);
 char* subAlias(char* name);
 int isAlias(char* name);
 int isPattern(char* word);
-char* subPattern(char* word);
-void printd(const char* desc, const char* val);
-void printd(const std::string& desc, const std::string& val);
+char* subPattern(const char* pattern);
 void printerr();
+
+const std::string& getPath();
+std::string getExecPath(const std::string& path, const std::string& program);
 /*************************** Functions ***************************/
 
 #endif // NUTSHELL_LIB_H

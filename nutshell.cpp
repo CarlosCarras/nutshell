@@ -11,14 +11,14 @@ int yyparse();
 int main() {
     setStartupVars();      // sets HOME, PATH variables
     restart();
-    system("clear");       // clears terminal window
+    run_cmd((char* const[]){ (char*)"clear", (char*)NULL }); // clear terminal window
 
     while(1) {
         getcwd(cwd, sizeof(cwd));
         cout << BLUE "nutshell" RESET ":" GREEN << cwd << WHITE ">> " RESET;
         
         yyparse();
-        usleep(1000);       // delay to fix race conditions
+        usleep(5000);       // delay to fix race conditions
     }
     return 0;
 }

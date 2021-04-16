@@ -19,10 +19,15 @@ word            [^ \\<>|="&\t\n]+
 metachar        [\\<>|"&]
 newline         "\n"
 whitespace      [ \t]
-inpipe          "<"
-outpipe         ">"
+stdin           <+
+stdout1         >+
+stdout2         >>+
+stderrf         2>[^ "&\t\n]+
+stderro         2>&1+
 
 %%
+
+<<EOF>>         {return FILEEND;}
 
 ^cd             {return CD;}
 ^pwd            {return PWD;}
@@ -73,8 +78,17 @@ outpipe         ">"
 <STRING>\n       {return INVALID;}
 <STRING>.        {*s++ = *yytext;}
 
-{inpipe}        {return INPIPE;}
-{outpipe}       {return OUTPIPE;}
+{stdin}         {return STDIN;}
+{stdout2}       {return STDOUT2;}
+{stdout1}       {return STDOUT1;}
+{stderro}       {return STDERRO;}
+{stderrf}       {
+                    char *yycopy = strdup(yytext);
+                    memmove(yycopy, yycopy+2, strlen(yycopy));
+                    yylval.string=strdup(yycopy);
+                    free(yycopy);
+                    return STDERRF;
+                }
 {newline}       {return END;}
 
 {word}          {
@@ -85,7 +99,7 @@ outpipe         ">"
                     }
 
                     if (isPattern(yycopy)) {
-                        yylval.string=strdup(subPattern(yycopy)); 
+                        yylval.string=strdup(subPattern(yycopy));
                     } else {
                         yylval.string=strdup(yycopy); 
                     }
