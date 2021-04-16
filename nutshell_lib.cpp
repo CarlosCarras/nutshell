@@ -6,6 +6,7 @@ extern "C" {
 #include <dirent.h>
 #include <fnmatch.h>
 #include <fcntl.h>
+#include <pwd.h>
 }
 #include "nutshell_lib.h"
 #include <iostream>
@@ -342,13 +343,47 @@ char* subPattern(const char* pattern) {
     return patternBuffer;
 }
 
+/************************ Tilde Expansion ************************/
+char subbedTildeExpansion[1024];
+
+int requiresTilde(char* word) {
+    string str(word);
+    if (str.at(0) == '~') return 1;
+    return 0;
+}
+
+char* subTilde(const char* word) {
+    string str(word);
+    string user;
+    struct passwd *p;
+
+    std::size_t found = str.find('/');
+    user = str.substr(1,found);
+    str.erase(0,found);
+
+    if (user.empty()) {
+        str = string(subVar((char*)"HOME")) + str;
+    } else {
+        if ((p = getpwnam(user.c_str())) == NULL) {
+            //cout << "error: unable to access the specified user's information.\n" << endl;
+            str.clear();
+        } else {
+            str = p->pw_dir + str; 
+        }
+    }
+
+    strcpy(subbedTildeExpansion, str.c_str());
+    return subbedTildeExpansion;
+}
+
+/************************ Tilde Expansion ************************/
+
 /************************ Print Functions ************************/
 
 void printerr() {
     string err = "error: ";
 
     switch(errno) {
-        /* chdir, putenv */
         case EACCES      : { err.append("search permission is denied for one of the components of path."); break; }
         case EFAULT      : { err.append("path points outside your accessible address space."); break; }
         case EIO         : { err.append("an I/O error occurred."); break; }
@@ -356,7 +391,11 @@ void printerr() {
         case ENAMETOOLONG: { err.append("path is too long."); break; }
         case ENOENT      : { err.append("the directory specified in path does not exist."); break; }
         case ENOMEM      : { err.append("insufficient kernel memory was available."); break; }
-        case ENOTDIR     : { err.append("q component of path is not a directory."); break; }
+        case ENOTDIR     : { err.append("a component of path is not a directory."); break; }
+        case ENFILE      : { err.append("the maximum number of files was open already in the system."); break; }
+        case EMFILE      : { err.append("the maximum number (OPEN_MAX) of files was open already in the calling process."); break; }
+        case EINTR       : { err.append("a signal was caught."); break; }
+        case ERANGE      : { err.append("insufficient buffer space supplied."); break; }
     }
 
     cout << err << endl;

@@ -89,21 +89,33 @@ stderro         2>&1+
                     free(yycopy);
                     return STDERRF;
                 }
+
 {newline}       {return END;}
 
 {word}          {
                     char *yycopy = strdup(yytext);
+                    char* postTildeSub;
+
                     if (strlen(yycopy) > MAX_WORD_LEN) {
                         printf("error: words cannot exceed %d characters.", MAX_WORD_LEN);
                         return INVALID;
                     }
 
-                    if (isPattern(yycopy)) {
-                        yylval.string=strdup(subPattern(yycopy));
+                    if (requiresTilde(yycopy)) {
+                        postTildeSub=strdup(subTilde(yycopy));
+                        if (postTildeSub[0] == '\0') {};
                     } else {
-                        yylval.string=strdup(yycopy); 
+                        postTildeSub=strdup(yycopy);
                     }
+
+                    if (isPattern(postTildeSub)) {
+                        yylval.string=strdup(subPattern(postTildeSub));
+                    } else {
+                        yylval.string=strdup(postTildeSub); 
+                    }
+
                     free(yycopy);
+                    free(postTildeSub);  
                     return WORD;
                 }
 

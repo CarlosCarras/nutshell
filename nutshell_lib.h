@@ -5,7 +5,7 @@
 #include <vector>
 
 /**************************** Defines ****************************/
-// #define DEBUG_NUTSHELL
+#define DEBUG_NUTSHELL
 
 #ifdef DEBUG_NUTSHELL
 #define CHECKPOINT(flag) cout << "check [" << flag << "]" << endl;
@@ -84,10 +84,12 @@ char* subAlias(char* name);
 int isAlias(char* name);
 int isPattern(char* word);
 char* subPattern(const char* pattern);
+int requiresTilde(char* word);
+char* subTilde(const char* word);
 void printerr();
 
 const std::string& getPath();
 std::string getExecPath(const std::string& path, const std::string& program);
-/*************************** Functions ***************************/
+/******************** Global Functions ***************************/
 
 #endif // NUTSHELL_LIB_H
