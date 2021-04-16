@@ -49,6 +49,84 @@ string getExecPath(const string& path, const string& program) {
     return string(program);
 }
 
+int executeCommand(char* args[], const char* fileStdIn, int stdIn, const char* fileStdOut, int stdOut, const char* fileStdErr, int stdErr, bool background) {
+    pid_t pid = fork();
+    if(pid == -1) {
+        return 1;
+    }
+
+    if(pid == 0) {
+        if(stdIn > 0) {
+            char* const* tempArg = args;
+            size_t argsSize = 0;
+            do {
+                ++argsSize;
+            } while(*tempArg++);
+
+            args[argsSize-1] = (char*)fileStdIn;
+            args[argsSize] = (char*)NULL;
+        }
+
+        if(stdOut > 0) {
+            // handle standard output
+            int flags = O_RDWR;
+            switch(stdOut) {
+                case 1: flags |= O_CREAT; break;
+                case 2: flags |= O_APPEND; break;
+            }
+
+            int fdOut = open(fileStdOut, flags, S_IRUSR | S_IWUSR);
+
+            dup2(fdOut, STDOUT_FILENO);
+
+            close(fdOut);
+        }
+
+        string exe(args[0]);
+        string path = getExecPath(getPath(), exe);
+        execv(path.c_str(), args);
+        
+        string err(args[0]);
+        err.append(": ");
+        char* const* arg = &args[1];
+        while(*arg != NULL) {
+            err.append(*arg++);
+        }
+        err.append(": ");
+        err.append(strerror(errno));
+        err.append("\n");
+
+        switch(stdErr) {
+            // handle std error
+            case 0: {
+                cout << err;
+                break;
+            }
+            case 1: {
+                int fdErr = open(fileStdErr, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+                write(fdErr, err.c_str(), err.length());
+                close(fdErr);
+                break;
+            }
+            case 2: {
+                int fdErr = open(fileStdOut, O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
+                write(fdErr, err.c_str(), err.length());
+                close(fdErr);
+                break;
+            }
+        }
+
+        return -1;
+    } else if(!background) {
+        int status;
+        if(waitpid(pid, &status, 0) == -1) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 int run_cmd(char* const args[]) {
     string exe(args[0]);
     string path = getExecPath(getPath(), exe);
@@ -99,36 +177,36 @@ int write_to_file(const char* file, const char* data, size_t len, int append) {
     return 0;
 }
 
-int redir_stdout(const char* file, char* const args[], int append) {
-    pid_t pid = fork();
-    if(pid == -1) {
-        return 1;
-    }
+// int redir_stdout(const char* file, char* const args[], int append) {
+//     pid_t pid = fork();
+//     if(pid == -1) {
+//         return 1;
+//     }
 
-    if(pid == 0) {
-        int flags = O_RDWR | (append ? O_APPEND : O_CREAT);
-        mode_t mode = S_IRUSR | S_IWUSR;
+//     if(pid == 0) {
+//         int flags = O_RDWR | (append ? O_APPEND : O_CREAT);
+//         mode_t mode = S_IRUSR | S_IWUSR;
 
-        int fd = open(file, flags, mode);
+//         int fd = open(file, flags, mode);
 
-        dup2(fd, STDOUT_FILENO);
+//         dup2(fd, STDOUT_FILENO);
 
-        close(fd);
+//         close(fd);
 
-        string path = "/bin/";
-        path.append(args[0]);
+//         string path = "/bin/";
+//         path.append(args[0]);
 
-        execv(path.c_str(), args);
-        return -1;
-    } else {
-        int status;
-        if(waitpid(pid, &status, 0) == -1) {
-            return 1;
-        }
-    }
+//         execv(path.c_str(), args);
+//         return -1;
+//     } else {
+//         int status;
+//         if(waitpid(pid, &status, 0) == -1) {
+//             return 1;
+//         }
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
 // int run_cmd(char* cmd) {
 //     cout << "command: " << cmd << endl;

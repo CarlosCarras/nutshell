@@ -23,6 +23,7 @@ void pipeenv_cmd(char* file);
 /***************************** Alias *****************************/
 void setalias_cmd(char* name, char* val);
 void unalias_cmd(char* name);
+std::string getAliasString();
 void printalias_cmd();
 
 /************************* Other Command *************************/

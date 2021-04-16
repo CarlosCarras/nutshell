@@ -147,16 +147,22 @@ void unalias_cmd(char* name) {
     removeTableIndex(aliasTable.word, index);
 }
 
-void printalias_cmd() {
+string getAliasString() {
     auto nameTableSize = aliasTable.name.size();
     auto wordTableSize = aliasTable.word.size();
     if(nameTableSize != wordTableSize) {
         printd("ERROR: name table and word table unequal sizes", to_string(nameTableSize) + " != " + to_string(wordTableSize));
     }
 
+    string str;
     for(size_t i = 0; i < nameTableSize; ++i) {
-        cout << aliasTable.name.at(i) << "=" << aliasTable.word.at(i) << endl;
+        str.append(aliasTable.name.at(i) + "=" + aliasTable.word.at(i) + "\n");
     }
+    return str;
+}
+
+void printalias_cmd() {
+    cout << getAliasString();
 }
 
 /************************* Other Command *************************/
@@ -274,9 +280,11 @@ void interpret_cmd(const cmdTable_t& cmd) {
         }
     }
 
+#ifdef DEBUG_NUTSHELL
     for(size_t i = 0; i < argsSize; ++i) {
         cout << i << " = [" << (args[i] == (char*)NULL ? "NULL" : args[i]) << "]" << endl;
     }
+#endif // DEBUG_NUTSHELL
 
     int status = run_cmd(args);
 
