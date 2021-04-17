@@ -48,26 +48,28 @@ string getExecPath(const string& path, const string& program) {
         }
     }
 
-    return string(program);
+    return "";
 }
 
-int executeCommand(char* args[], const char* fileStdIn, int stdIn, const char* fileStdOut, int stdOut, const char* fileStdErr, int stdErr, bool background) {
+int executeCommand(command_t command) {
+    auto [args, fileStdIn, fileStdOut, fileStdErr, inFlag, outFlag, errFlag, background] = command;
+
     pid_t pid = fork();
     if(pid == -1) {
         return 1;
     }
 
     if(pid == 0) {
-        if(stdIn > 0) {
+        if(inFlag > 0) {
             int fdIn = open(fileStdIn, O_RDONLY);
             dup2(fdIn, STDIN_FILENO);
             close(fdIn);
         }
 
-        if(stdOut > 0) {
+        if(outFlag > 0) {
             // handle standard output
             int flags = O_RDWR;
-            switch(stdOut) {
+            switch(command.outFlag) {
                 case 1: flags |= O_CREAT; break;
                 case 2: flags |= O_APPEND; break;
             }
@@ -79,21 +81,25 @@ int executeCommand(char* args[], const char* fileStdIn, int stdIn, const char* f
             close(fdOut);
         }
 
-        string exe(args[0]);
+        string exe(args.at(0));
         string path = getExecPath(getPath(), exe);
-        execv(path.c_str(), args);
+
+        if(path == "") {
+            return 2;
+        }
+
+        execv(path.c_str(), args.data());
         
-        string err(args[0]);
+        string err(args.at(0));
         err.append(": ");
-        char* const* arg = &args[1];
-        while(*arg != NULL) {
-            err.append(*arg++);
+        for(size_t i = 1; i < args.size(); ++i) {
+            err.append(args.at(i));
         }
         err.append(": ");
         err.append(strerror(errno));
         err.append("\n");
 
-        switch(stdErr) {
+        switch(errFlag) {
             // handle std error
             case 0: {
                 cout << err;
@@ -106,7 +112,7 @@ int executeCommand(char* args[], const char* fileStdIn, int stdIn, const char* f
                 break;
             }
             case 2: {
-                if(stdOut > 0) {
+                if(outFlag > 0) {
                     int fdErr = open(fileStdOut, O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
                     write(fdErr, err.c_str(), err.length());
                     close(fdErr);

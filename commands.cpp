@@ -214,11 +214,14 @@ void handle_cmd(
 }
 
 void interpret_cmd(const cmdTable_t& cmd) {
-    // string command(cmd.command);
-    // command.append(" 2> /dev/null"); // suppress stderr
-
-    // string cmdString(cmd.command);
-    // if(cmd.args != NULL && cmd.args[0] != '\0') { cmdString.append(cmd.args); };
+    command_t command;
+    command.fileStdIn = cmd.standardin;
+    command.fileStdOut = cmd.standardout;
+    command.fileStdErr = cmd.standarderr;
+    command.inFlag = cmd.inFlag;
+    command.outFlag = cmd.outFlag;
+    command.errFlag = cmd.errFlag;
+    command.background = cmd.background;
 
     string commandString(cmd.command);
     ptrdiff_t numQuotedArgs = count(commandString.begin(), commandString.end(), ' ');
@@ -244,7 +247,7 @@ void interpret_cmd(const cmdTable_t& cmd) {
     }
 
     char cmdCopy[64];
-    char argsCopy[512];
+    char argsCopy[1024];
 
     size_t argsCopyIndex = 0;
 
@@ -273,14 +276,13 @@ void interpret_cmd(const cmdTable_t& cmd) {
     }
     size_t argsSize = numQuotedArgs + numArgs + 2;
 
-    char* args[argsSize];
-
-    args[0] = cmdCopy;
-    args[argsSize-1] = (char*)NULL;
+    command.args = vector<char*>();
+    command.args.reserve(argsSize);
+    command.args.push_back(cmdCopy);
 
     size_t pos = 0;
     for(int i = 0; i < numQuotedArgs; ++i) {
-        args[i+1] = &argsCopy[pos];
+        command.args.push_back(&argsCopy[pos]);
         pos += cmdVector.at(i).length() + 1;
     }
 
@@ -295,42 +297,22 @@ void interpret_cmd(const cmdTable_t& cmd) {
   
         pos = 0;
         for(int i = 0; i < numArgs + numQuotedArgs; ++i) {
-            args[i+1] = &argsCopy[pos];
+            command.args.push_back(&argsCopy[pos]);
             pos = argumentsString.find(' ', pos+1) + 1;
         }
     }
 
+    command.args.push_back((char*)NULL);
+
 #ifdef DEBUG_NUTSHELL
     for(size_t i = 0; i < argsSize; ++i) {
-        cout << i << " = [" << (args[i] == (char*)NULL ? "NULL" : args[i]) << "]" << endl;
+        cout << i << " = [" << (command.args[i] == (char*)NULL ? "NULL" : command.args[i]) << "]" << endl;
     }
 #endif // DEBUG_NUTSHELL
 
-    executeCommand(args, cmd.standardin, cmd.inFlag, cmd.standardout, cmd.outFlag, cmd.standarderr, cmd.errFlag, cmd.background);
-
-    // int status = run_cmd(args);
-
-    // if(status == -1) { unknown_command(); }
-
-    // auto bufferLength = strlen(cmd.command);
-    // if(cmd.args != NULL) {
-    //     bufferLength += strlen(cmd.args);
-    // }
-
-    // char cmdBuffer[bufferLength + 8];
-    // strcpy(cmdBuffer, cmd.command);
-    // if(cmd.args != NULL && cmd.args[0] != '\0') {
-    //     strcat(cmdBuffer, (const char*)" ");
-    //     strcat(cmdBuffer, cmd.args);
-    // };
-
-    // int status = run_cmd(cmdBuffer);
-
-    // int status = system(command.c_str());
-    
-    // if      (status < 0)       { printerr();        return; }
-    // else if (status == 0x7F00) { unknown_command(); return; }
-
-    //printd("CMD:", cmd.command);
-    //printd("ARGS:", cmd.args);
+    int execErr = executeCommand(command);
+    switch(execErr) {
+        case 1: cout << "Error executing command" << endl; break;
+        case 2: cout << "Error: command cannot be run" << endl; break;
+    }
 }
