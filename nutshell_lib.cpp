@@ -77,7 +77,6 @@ int executeCommand(command_t command) {
             } else {
                 // if we are the first command
                 if(inFlag > 0) {
-                    cout << "check";
                     int fdIn = open(fileStdIn, O_RDONLY);
                     dup2(fdIn, STDIN_FILENO);
                     close(fdIn);
@@ -314,13 +313,18 @@ void setAlias(char* name, char* word) {
 }
 
 char* subAlias(char* name) {
-    auto it = find(aliasTable.name.begin(), aliasTable.name.end(), name);
-    if(it == aliasTable.name.end()) {
-        return name;
-    }
+    static string alias;
 
-    auto index = distance(aliasTable.name.begin(), it);
-    return (char*)(aliasTable.word.at(index).c_str());
+    alias = string(name);
+    while(true) {
+        auto it = find(aliasTable.name.begin(), aliasTable.name.end(), alias);
+        if(it == aliasTable.name.end()) {
+            return (char*)(alias.c_str());
+        }
+
+        auto index = distance(aliasTable.name.begin(), it);
+        alias = aliasTable.word.at(index);
+    }
 }
 
 int isAlias(char* name) {
