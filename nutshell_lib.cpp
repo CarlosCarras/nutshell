@@ -304,12 +304,28 @@ int isPattern(char* word) {
     return str.find("?") != end || str.find("*") != end;
 }
 
-char* subPattern(const char* pattern) {
+char* subPattern(const char* word) {
     DIR* d;
     struct dirent* dir;
     vector<string> fileList;
 
-    d = opendir((const char*)".");
+    /* getting the path and the pattern from the input */
+    string pattern, path;
+    string input(word);
+    string copy = input;
+    
+    reverse(copy.begin(), copy.end());
+    size_t startOfTarget = copy.find_first_of("/");
+
+    if (startOfTarget == string::npos) {
+        startOfTarget = input.size();
+        path = ".";
+    } else {
+        path = input.substr(0, input.size()-startOfTarget);
+    }
+    pattern = input.substr(input.size() - startOfTarget);
+
+    d = opendir((const char*)path.c_str());
     if(d) {
         while((dir = readdir(d)) != NULL) {
             fileList.emplace_back(dir->d_name);
@@ -319,7 +335,7 @@ char* subPattern(const char* pattern) {
 
     string matchedWildcards;
     for(const auto& f : fileList) {
-        if(fnmatch(pattern, f.c_str(), 0) == 0) {
+        if(fnmatch(pattern.c_str(), f.c_str(), 0) == 0) {
             // match with wildcard against file name
             matchedWildcards.append(f);
             matchedWildcards.append(" ");
@@ -328,7 +344,7 @@ char* subPattern(const char* pattern) {
 
     if(matchedWildcards.empty()) {
         // no wilcard matches so just return original string
-        strcpy(patternBuffer, pattern);
+        strcpy(patternBuffer, pattern.c_str());
         return patternBuffer;
     }
     matchedWildcards.pop_back(); // remove last space
@@ -337,7 +353,7 @@ char* subPattern(const char* pattern) {
 
     if(matchedWildcards.length()+1 > 1024) {
         cout << "error: wildcards size larger than buffer" << endl;
-        strcpy(patternBuffer, pattern);
+        strcpy(patternBuffer, pattern.c_str());
         return patternBuffer;
     }
     
@@ -345,13 +361,35 @@ char* subPattern(const char* pattern) {
     return patternBuffer;
 }
 
+char* subPattern_NoDirChange(const char* word) {
+    /* getting the path and the pattern from the input */
+    string pattern, path;
+    string input(word);
+    string copy = input;
+    
+    reverse(copy.begin(), copy.end());
+    size_t startOfTarget = copy.find_first_of("/");
+
+    if (startOfTarget == string::npos) {
+        startOfTarget = input.size();
+        path = ".";
+    } else {
+        path = input.substr(0, input.size()-startOfTarget);
+    }
+
+    char* subbedPattern = strdup(subPattern(input.c_str()));
+
+    string dir = path + string(subbedPattern);
+    strcpy(patternBuffer, dir.c_str());
+    return patternBuffer;
+
+}
+
 /************************ Tilde Expansion ************************/
 char subbedTildeExpansion[1024];
 
-int requiresTilde(char* word) {
-    string str(word);
-    if (str.at(0) == '~') return 1;
-    return 0;
+int requiresTildeExp(char* word) {
+    return word[0] == '~';
 }
 
 char* subTilde(const char* word) {
@@ -384,18 +422,51 @@ char* subTilde(const char* word) {
 char subbedEscapedExpansion[1024];
 
 char* handle_esc(char* word) {
-    string pattern = string(word) + "*";
-    char* candidates = subPattern(pattern.c_str());
+    if (requiresTildeExp(word)) {
+        vector<string> candidateList;
+        fstream fs;
 
-    istringstream iss(candidates);
-    vector<string> results(istream_iterator<string>{iss},
-                           istream_iterator<string>());
+        string incoming(word);
+        size_t endOfUser = incoming.find("/");
+        if (endOfUser == string::npos) endOfUser = incoming.length();
+        string potentialUser = incoming.substr(1, endOfUser-1);  // eliminating '~' from begining of word
+        
+        fs.open("/etc/passwd",ios::in);
+        if (fs.is_open()) {
+            string line, user, home;
+            struct passwd *p;
+            
+            while(getline(fs, line)) {
+                user = line.substr(0, line.find(":"));
+                if (user.find(potentialUser) == 0) {     // if the pattern matches the start of one of the users...
+                    p = getpwnam(user.c_str()); // get the user's home directory
+                    candidateList.emplace_back(p->pw_dir);  // save the home directory 
+                }
+            }
+            fs.close();
 
-    if (results.size() == 1) {
-        strcpy(subbedEscapedExpansion, results[0].c_str());
-        return subbedEscapedExpansion;
+            if (candidateList.size() == 1) {    // if the result is not ambiguous...
+                strcpy(subbedEscapedExpansion, candidateList[0].c_str());
+                strcat(subbedEscapedExpansion, incoming.substr(endOfUser).c_str());
+                return subbedEscapedExpansion;
+            }
+        } else {
+            cout << "error: unable to open /etc/passwd" << endl;
+        }
+
+    } else {
+        string pattern = string(word) + "*";
+        char* candidates = subPattern_NoDirChange(pattern.c_str());
+
+        istringstream iss(candidates);
+        vector<string> candidateList(istream_iterator<string>{iss},
+                                     istream_iterator<string>());
+
+        if (candidateList.size() == 1) {
+            strcpy(subbedEscapedExpansion, candidateList[0].c_str());
+            return subbedEscapedExpansion;
+        }
     }
-    
     return word;
 }
 
