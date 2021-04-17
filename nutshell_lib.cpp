@@ -52,83 +52,116 @@ string getExecPath(const string& path, const string& program) {
 }
 
 int executeCommand(command_t command) {
-    auto [args, fileStdIn, fileStdOut, fileStdErr, inFlag, outFlag, errFlag, background] = command;
+    auto [argsList, fileStdIn, fileStdOut, fileStdErr, inFlag, outFlag, errFlag, background] = command;
 
-    pid_t pid = fork();
-    if(pid == -1) {
-        return 1;
-    }
+    int fdNext[2], fdPrev[2];
 
-    if(pid == 0) {
-        if(inFlag > 0) {
-            int fdIn = open(fileStdIn, O_RDONLY);
-            dup2(fdIn, STDIN_FILENO);
-            close(fdIn);
+    for(const auto& args : argsList) {
+        const bool hasNextCmd = args != argsList.back();
+        const bool hasPrevCmd = args != argsList.front();
+
+        if(hasNextCmd) {
+            pipe(fdNext);
         }
 
-        if(outFlag > 0) {
-            // handle standard output
-            int flags = O_RDWR;
-            switch(command.outFlag) {
-                case 1: flags |= O_CREAT; break;
-                case 2: flags |= O_APPEND; break;
-            }
-
-            int fdOut = open(fileStdOut, flags, S_IRUSR | S_IWUSR);
-
-            dup2(fdOut, STDOUT_FILENO);
-
-            close(fdOut);
-        }
-
-        string exe(args.at(0));
-        string path = getExecPath(getPath(), exe);
-
-        if(path == "") {
-            return 2;
-        }
-
-        execv(path.c_str(), args.data());
-        
-        string err(args.at(0));
-        err.append(": ");
-        for(size_t i = 1; i < args.size(); ++i) {
-            err.append(args.at(i));
-        }
-        err.append(": ");
-        err.append(strerror(errno));
-        err.append("\n");
-
-        switch(errFlag) {
-            // handle std error
-            case 0: {
-                cout << err;
-                break;
-            }
-            case 1: {
-                int fdErr = open(fileStdErr, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-                write(fdErr, err.c_str(), err.length());
-                close(fdErr);
-                break;
-            }
-            case 2: {
-                if(outFlag > 0) {
-                    int fdErr = open(fileStdOut, O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
-                    write(fdErr, err.c_str(), err.length());
-                    close(fdErr);
-                } else {
-                    cout << err;
-                }
-                break;
-            }
-        }
-
-        return -1;
-    } else if(!background) {
-        int status;
-        if(waitpid(pid, &status, 0) == -1) {
+        pid_t pid = fork();
+        if(pid == -1) {
             return 1;
         }
+
+        if(pid == 0) {
+            if(hasPrevCmd) {
+                dup2(fdPrev[STDIN_FILENO], STDIN_FILENO);
+                close(fdPrev[STDIN_FILENO]);
+                close(fdPrev[STDOUT_FILENO]);
+            } else {
+                // if we are the first command
+                if(inFlag > 0) {
+                    cout << "check";
+                    int fdIn = open(fileStdIn, O_RDONLY);
+                    dup2(fdIn, STDIN_FILENO);
+                    close(fdIn);
+                }
+            }
+            if(hasNextCmd) {
+                close(fdNext[STDIN_FILENO]);
+                dup2(fdNext[STDOUT_FILENO], STDOUT_FILENO);
+                close(fdNext[STDOUT_FILENO]);
+            } else {
+                // if we are at the last command
+                if(outFlag > 0) {
+                    // handle standard output
+                    int flags = O_RDWR;
+                    switch(command.outFlag) {
+                        case 1: flags |= O_CREAT; break;
+                        case 2: flags |= O_APPEND; break;
+                    }
+
+                    int fdOut = open(fileStdOut, flags, S_IRUSR | S_IWUSR);
+
+                    dup2(fdOut, STDOUT_FILENO);
+
+                    close(fdOut);
+                }
+            }
+
+            string path = "/bin/" + string(args.at(0));
+            execv(path.c_str(), args.data());
+
+            string err(args.at(0));
+            err.append(": ");
+            for(size_t i = 1; i < args.size(); ++i) {
+                err.append(args.at(i));
+            }
+            err.append(": ");
+            err.append(strerror(errno));
+            err.append("\n");
+
+            switch(errFlag) {
+                // handle std error
+                case 0: {
+                    cout << err;
+                    break;
+                }
+                case 1: {
+                    int fdErr = open(fileStdErr, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+                    write(fdErr, err.c_str(), err.length());
+                    close(fdErr);
+                    break;
+                }
+                case 2: {
+                    if(outFlag > 0) {
+                        int fdErr = open(fileStdOut, O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
+                        write(fdErr, err.c_str(), err.length());
+                        close(fdErr);
+                    } else {
+                        cout << err;
+                    }
+                    break;
+                }
+            }
+
+            return -1;
+        } else if(!background) {
+            if(hasPrevCmd) {
+                close(fdPrev[STDIN_FILENO]);
+                close(fdPrev[STDOUT_FILENO]);
+            }
+            if(hasNextCmd) {
+                fdPrev[STDIN_FILENO] = fdNext[STDIN_FILENO];
+                fdPrev[STDOUT_FILENO] = fdNext[STDOUT_FILENO];
+            }
+
+            int status;
+            if(waitpid(pid, &status, 0) == -1) {
+                return 1;
+            }
+        }
+    }
+
+    if(argsList.size() > 1) {
+        close(fdPrev[STDIN_FILENO]);
+        close(fdPrev[STDOUT_FILENO]);
     }
 
     return 0;

@@ -15,7 +15,7 @@ char *s;
 
 envvar          \$\{(.*?)\}
 quote           ["]
-word            [^ \x1B\\<>|="&\t\n]+
+word            [^ \x1B\\<>="&\t\n]+
 escapedword     [^ \x1B\\<>|="&\t\n]+[\x1B]
 metachar        [\\<>|"&]
 newline         "\n"

@@ -43,6 +43,4 @@ void handle_cmd(
                 int background
 );
 
-void interpret_cmd(const cmdTable_t& cmd);
-
 #endif // NUTSHELL_CMDS_H

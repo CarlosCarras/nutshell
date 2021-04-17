@@ -187,132 +187,105 @@ void handle_cmd(
                 int stdout_n_file,
                 int background
 ) {
+    string cmdString;
+    string argsString(arguments == NULL ? "" : arguments);
+
+    istringstream iss;
+
+    // break up the args in quotes and search for wildcards
+    bool foundCmd = false;
+    string tempCmdString(command);
+    iss = istringstream(tempCmdString);
+    string token;
+    string quotedArgs;
+    while(getline(iss, token, ' ')) {
+        if(foundCmd) {
+            quotedArgs.append((isPattern((char*)token.c_str()) ? subPattern(token.c_str()) : token) + " ");
+        } else {
+            cmdString = token;
+            foundCmd = true;
+        }
+    }
+    
+    argsString.insert(0, quotedArgs);
+    if(argsString.back() == ' ') {
+        argsString.pop_back();
+    }
+
+    // search for any additional aliases
+    iss = istringstream(argsString);
+    while(getline(iss, token, ' ')) {
+        if(isAlias((char*)token.c_str())) {
+            auto pos = argsString.find(token);
+            auto len = token.length();
+            argsString.replace(pos, len, subAlias((char*)token.c_str()));
+        }
+    }
+
+    // search for pipes
+    iss = istringstream(cmdString + " " + argsString);
+    list<vector<string>> argsList;
+    while(getline(iss, token, '|')) {
+        vector<string> argsArr;
+        if(token.front() == ' ') {
+            token.erase(token.begin());
+        }
+        if(token.back() == ' ') {
+            token.erase(token.end()-1);
+        }
+        
+        istringstream issNested(token);
+        string tokenNested;
+        while(getline(issNested, tokenNested, ' ')) {
+            argsArr.push_back(tokenNested);
+        }
+
+        argsList.push_back(argsArr);
+    }
+
 #ifdef DEBUG_NUTSHELL
-    cout << "CMD=[" << (command == NULL ? "NULL" : command) << "] ";
-    cout << "ARGS=[" << (arguments == NULL ? "NULL" : arguments) << "] ";
+    cout << "ARGS LIST=";
+    for(const auto& x : argsList) {
+        cout << "[";
+        for(const auto& y : x) {
+            cout << "<" << y << ">";
+        }
+        cout << "] ";
+    }
+    cout << endl;
     cout << "INFILE=[" << (standardin == NULL ? "NULL" : standardin) << "] ";
     cout << "OUTFILE=[" << (stdandardout == NULL ? "NULL" : stdandardout) << "] ";
-    cout << "ERRFILE=[" << (stdandarderr == NULL ? "NULL" : stdandarderr) << "] ";
-    cout << "BACKGROUND=[" << background << "] ";
-    cout << endl;
+    cout << "ERRFILE=[" << (stdandarderr == NULL ? "NULL" : stdandarderr) << "]" << endl;
+    cout << "BACKGROUND=[" << background << "]" << endl;
 #endif // DEBUG_NUTSHELL
 
-    cmdTable_t cmd = {
-        .command = command,
-        .args = arguments,
-        .standardin = standardin,
-        .standardout = stdandardout,
-        .standarderr = stdandarderr,
-        .background = (bool)background,
-        .inFlag = (int)(standardin != NULL),
-        .outFlag = (int)(stdandardout != NULL ? (append_n_create+1) : 0),
-        .errFlag = (int)(stdout_n_file ? 2 : stdandarderr != NULL)
-    };
+    command_t cmdTable;
+    cmdTable.fileStdIn = standardin;
+    cmdTable.fileStdOut = stdandardout;
+    cmdTable.fileStdErr = stdandarderr;
+    cmdTable.inFlag = (int)(standardin != NULL);
+    cmdTable.outFlag = (int)(stdandardout != NULL ? (append_n_create+1) : 0);
+    cmdTable.errFlag = (int)(stdout_n_file ? 2 : stdandarderr != NULL);
+    cmdTable.background = (bool)background;
+    cmdTable.args = list<vector<char*>>();
 
-    interpret_cmd(cmd);
-    restart();
-}
+    for(const auto& v : argsList) {
+        vector<char*> tempVect;
+        tempVect.reserve(v.size());
 
-void interpret_cmd(const cmdTable_t& cmd) {
-    command_t command;
-    command.fileStdIn = cmd.standardin;
-    command.fileStdOut = cmd.standardout;
-    command.fileStdErr = cmd.standarderr;
-    command.inFlag = cmd.inFlag;
-    command.outFlag = cmd.outFlag;
-    command.errFlag = cmd.errFlag;
-    command.background = cmd.background;
-
-    string commandString(cmd.command);
-    ptrdiff_t numQuotedArgs = count(commandString.begin(), commandString.end(), ' ');
-
-    istringstream iss(commandString);
-    string token;
-    vector<string> cmdVector;
-    while(getline(iss, token, ' ')) {
-        if(isPattern((char*)token.c_str())) {
-            string wildcardList = string(subPattern(token.c_str()));
-
-            istringstream issNested(wildcardList);
-            string tokenNested;
-            int additionalArgs = -1;
-            while(getline(issNested, tokenNested, ' ')) {
-                cmdVector.emplace_back(tokenNested);
-                ++additionalArgs;
-            }
-            numQuotedArgs += additionalArgs;
-        } else {
-            cmdVector.emplace_back(token);
+        for(const auto& s : v) {
+            tempVect.push_back(const_cast<char*>(s.c_str()));
         }
+        tempVect.push_back((char*)NULL);
+
+        cmdTable.args.push_back(tempVect);
     }
 
-    char cmdCopy[64];
-    char argsCopy[1024];
-
-    size_t argsCopyIndex = 0;
-
-    if(numQuotedArgs > 0) {
-        strcpy(cmdCopy, cmdVector.at(0).c_str());
-
-        cmdVector.erase(cmdVector.begin());
-
-        for(const auto& arg : cmdVector) {
-            for(char c : arg) {
-                argsCopy[argsCopyIndex++] = c;
-            }
-            argsCopy[argsCopyIndex++] = '\0';
-        }
-    } else {
-        strcpy(cmdCopy, commandString.c_str());
-    }
-
-    bool hasArgs = cmd.args != NULL;
-
-    ptrdiff_t numArgs = 0;
-    string argumentsString;
-    if(hasArgs) {
-        argumentsString = string(cmd.args);
-        numArgs = count(argumentsString.begin(), argumentsString.end(), ' ') + 1;
-    }
-    size_t argsSize = numQuotedArgs + numArgs + 2;
-
-    command.args = vector<char*>();
-    command.args.reserve(argsSize);
-    command.args.push_back(cmdCopy);
-
-    size_t pos = 0;
-    for(int i = 0; i < numQuotedArgs; ++i) {
-        command.args.push_back(&argsCopy[pos]);
-        pos += cmdVector.at(i).length() + 1;
-    }
-
-    if(hasArgs) {
-        auto argsStrLen = strlen(cmd.args);
-
-        for(size_t i = 0; i < argsStrLen; ++i) {
-            char original = cmd.args[i];
-            argsCopy[argsCopyIndex++] = original == ' ' ? '\0' : original;
-        }
-        argsCopy[argsCopyIndex] = '\0';
-  
-        pos = 0;
-        for(int i = 0; i < numArgs + numQuotedArgs; ++i) {
-            command.args.push_back(&argsCopy[pos]);
-            pos = argumentsString.find(' ', pos+1) + 1;
-        }
-    }
-
-    command.args.push_back((char*)NULL);
-
-#ifdef DEBUG_NUTSHELL
-    for(size_t i = 0; i < argsSize; ++i) {
-        cout << i << " = [" << (command.args[i] == (char*)NULL ? "NULL" : command.args[i]) << "]" << endl;
-    }
-#endif // DEBUG_NUTSHELL
-
-    int execErr = executeCommand(command);
+    int execErr = executeCommand(cmdTable);
     switch(execErr) {
         case 1: cout << "Error executing command" << endl; break;
         case 2: cout << "Error: command cannot be run" << endl; break;
     }
+
+    restart();
 }

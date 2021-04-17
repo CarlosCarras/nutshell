@@ -3,9 +3,10 @@
 
 #include <string>
 #include <vector>
+#include <list>
 
 /**************************** Defines ****************************/
-#define DEBUG_NUTSHELL
+//#define DEBUG_NUTSHELL
 
 #ifdef DEBUG_NUTSHELL
 #define CHECKPOINT(flag) cout << "check [" << flag << "]" << endl;
@@ -39,20 +40,20 @@ typedef struct aTable {
     std::vector<std::string> word;
 } aTable_t;
 
-typedef struct cmdTable {
-    const char* command;
-    const char* args; 
-    const char* standardin;
-    const char* standardout;
-    const char* standarderr;
-    bool background;
-    int inFlag;
-    int outFlag;
-    int errFlag;
-} cmdTable_t;
+// typedef struct cmdTable {
+//     const char* command;
+//     const char* args; 
+//     const char* standardin;
+//     const char* standardout;
+//     const char* standarderr;
+//     bool background;
+//     int inFlag;
+//     int outFlag;
+//     int errFlag;
+// } cmdTable_t;
 
 typedef struct command {
-    std::vector<char*> args;
+    std::list<std::vector<char*>> args;
     const char* fileStdIn;
     const char* fileStdOut;
     const char* fileStdErr;
