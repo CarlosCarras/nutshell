@@ -298,12 +298,28 @@ int isPattern(char* word) {
     return str.find("?") != end || str.find("*") != end;
 }
 
-char* subPattern(const char* pattern) {
+char* subPattern(const char* word) {
     DIR* d;
     struct dirent* dir;
     vector<string> fileList;
 
-    d = opendir((const char*)".");
+    /* getting the path and the pattern from the input */
+    string pattern, path;
+    string input(word);
+    string copy = input;
+    
+    reverse(copy.begin(), copy.end());
+    size_t startOfTarget = copy.find_first_of("/");
+
+    if (startOfTarget == string::npos) {
+        startOfTarget = input.size();
+        path = ".";
+    } else {
+        path = input.substr(0, input.size()-startOfTarget);
+    }
+    pattern = input.substr(input.size() - startOfTarget);
+
+    d = opendir((const char*)path.c_str());
     if(d) {
         while((dir = readdir(d)) != NULL) {
             fileList.emplace_back(dir->d_name);
@@ -313,7 +329,7 @@ char* subPattern(const char* pattern) {
 
     string matchedWildcards;
     for(const auto& f : fileList) {
-        if(fnmatch(pattern, f.c_str(), 0) == 0) {
+        if(fnmatch(pattern.c_str(), f.c_str(), 0) == 0) {
             // match with wildcard against file name
             matchedWildcards.append(f);
             matchedWildcards.append(" ");
@@ -322,7 +338,7 @@ char* subPattern(const char* pattern) {
 
     if(matchedWildcards.empty()) {
         // no wilcard matches so just return original string
-        strcpy(patternBuffer, pattern);
+        strcpy(patternBuffer, pattern.c_str());
         return patternBuffer;
     }
     matchedWildcards.pop_back(); // remove last space
@@ -331,12 +347,36 @@ char* subPattern(const char* pattern) {
 
     if(matchedWildcards.length()+1 > 1024) {
         cout << "error: wildcards size larger than buffer" << endl;
-        strcpy(patternBuffer, pattern);
+        strcpy(patternBuffer, pattern.c_str());
         return patternBuffer;
     }
     
     strcpy(patternBuffer, matchedWildcards.c_str());
     return patternBuffer;
+}
+
+char* subPattern_NoDirChange(const char* word) {
+    /* getting the path and the pattern from the input */
+    string pattern, path;
+    string input(word);
+    string copy = input;
+    
+    reverse(copy.begin(), copy.end());
+    size_t startOfTarget = copy.find_first_of("/");
+
+    if (startOfTarget == string::npos) {
+        startOfTarget = input.size();
+        path = ".";
+    } else {
+        path = input.substr(0, input.size()-startOfTarget);
+    }
+
+    char* subbedPattern = strdup(subPattern(input.c_str()));
+
+    string dir = path + string(subbedPattern);
+    strcpy(patternBuffer, dir.c_str());
+    return patternBuffer;
+
 }
 
 /************************ Tilde Expansion ************************/
@@ -410,7 +450,7 @@ char* handle_esc(char* word) {
 
     } else {
         string pattern = string(word) + "*";
-        char* candidates = subPattern(pattern.c_str());
+        char* candidates = subPattern_NoDirChange(pattern.c_str());
 
         istringstream iss(candidates);
         vector<string> candidateList(istream_iterator<string>{iss},

@@ -84,6 +84,7 @@ char* subAlias(char* name);
 int isAlias(char* name);
 int isPattern(char* word);
 char* subPattern(const char* pattern);
+char* subPattern_NoDirChange(const char* word);
 int requiresTildeExp(char* word);
 char* subTilde(const char* word);
 char* handle_esc(char* word);
