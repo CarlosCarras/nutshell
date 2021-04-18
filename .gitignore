@@ -7,3 +7,4 @@ cmdtest
 cmdtest.cpp
 *.txt
 *.out
+test
