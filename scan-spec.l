@@ -32,7 +32,6 @@ stderro         2>&1+
 
 ^cd             {return CD;}
 ^pwd            {return PWD;}
-^echo           {return ECHO_CMD;}
 ^bye            {return BYE;}
 ^setenv         {return SETENV;}
 ^unsetenv       {return UNSETENV;}

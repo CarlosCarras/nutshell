@@ -26,7 +26,7 @@ void echo_cmd(char* val) {
 }
 
 void bye_cmd() {
-    exit(EXIT_SUCCESS);
+    while(1) exit(EXIT_SUCCESS);
 }
 
 /********************* Environment Variables *********************/

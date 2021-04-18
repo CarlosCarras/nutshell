@@ -90,58 +90,38 @@ int executeCommand(command_t command) {
                 // if we are at the last command
                 if(outFlag > 0) {
                     // handle standard output
-                    int flags = O_RDWR;
+                    int flags = O_WRONLY;
                     switch(command.outFlag) {
                         case 1: flags |= O_CREAT; break;
                         case 2: flags |= O_APPEND; break;
                     }
 
                     int fdOut = open(fileStdOut, flags, S_IRUSR | S_IWUSR);
-
                     dup2(fdOut, STDOUT_FILENO);
-
+                    if(errFlag == 2) {
+                        dup2(fdOut, STDERR_FILENO);
+                    }
                     close(fdOut);
                 }
-            }
 
-            string path = "/bin/" + string(args.at(0));
-            execv(path.c_str(), args.data());
-
-            string err(args.at(0));
-            err.append(": ");
-            for(size_t i = 1; i < args.size(); ++i) {
-                err.append(args.at(i));
-            }
-            err.append(": ");
-            err.append(strerror(errno));
-            err.append("\n");
-
-            switch(errFlag) {
-                // handle std error
-                case 0: {
-                    cout << err;
-                    break;
-                }
-                case 1: {
-                    int fdErr = open(fileStdErr, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-                    write(fdErr, err.c_str(), err.length());
+                if(errFlag == 1) {
+                    int fdErr = open(fileStdErr, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+                    dup2(fdErr, STDERR_FILENO);
                     close(fdErr);
-                    break;
-                }
-                case 2: {
-                    if(outFlag > 0) {
-                        int fdErr = open(fileStdOut, O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
-                        write(fdErr, err.c_str(), err.length());
-                        close(fdErr);
-                    } else {
-                        cout << err;
-                    }
-                    break;
                 }
             }
 
+            string file(args.at(0));
+            if((file.at(0) == '.' && file.at(1) == '/') || file.at(0) == '/') {
+                execv(file.c_str(), args.data());
+            } else {
+                string path = getExecPath(getPath(), file);
+                execv(path.c_str(), args.data());
+            }
+
+            cout << "command [" << string(args.at(0)) << "]: " << strerror(errno) << endl;
             return -1;
-        } else if(!background) {
+        } else {
             if(hasPrevCmd) {
                 close(fdPrev[STDIN_FILENO]);
                 close(fdPrev[STDOUT_FILENO]);
@@ -151,9 +131,11 @@ int executeCommand(command_t command) {
                 fdPrev[STDOUT_FILENO] = fdNext[STDOUT_FILENO];
             }
 
-            int status;
-            if(waitpid(pid, &status, 0) == -1) {
-                return 1;
+            if(!background) {
+                int status;
+                if(waitpid(pid, &status, 0) == -1) {
+                    return 1;
+                }
             }
         }
     }

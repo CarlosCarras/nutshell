@@ -21,7 +21,7 @@
     int boolean;
 }
 
-%token CD BYE PWD SETENV UNSETENV PRINTENV ALIAS UNALIAS INVALIDALIAS ECHO_CMD
+%token CD BYE PWD SETENV UNSETENV PRINTENV ALIAS UNALIAS INVALIDALIAS
 %token STDIN STDOUT1 STDOUT2 STDERRF STDERRO
 %token END INVALID FILEEND
 
@@ -38,7 +38,6 @@ command: FILEEND                {bye_cmd();}
        | CD                     {cd_home();}
        | CD WORD                {cd_cmd($2);}
        | PWD                    {pwd_cmd();} 
-       | ECHO_CMD WORD          {echo_cmd($2);}
        | BYE                    {bye_cmd();} 
        | SETENV WORD WORD       {setenv_cmd($2, $3);}
        | UNSETENV WORD          {unsetenv_cmd($2);}
