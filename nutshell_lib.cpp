@@ -391,7 +391,7 @@ char* subPattern_NoDirChange(const char* word) {
 
     if (startOfTarget == string::npos) {
         startOfTarget = input.size();
-        path = ".";
+        path = "./";
     } else {
         path = input.substr(0, input.size()-startOfTarget);
     }
@@ -449,7 +449,7 @@ char* handle_esc(char* word) {
         size_t endOfUser = incoming.find("/");
         if (endOfUser == string::npos) endOfUser = incoming.length();
         string potentialUser = incoming.substr(1, endOfUser-1);  // eliminating '~' from begining of word
-        
+
         fs.open("/etc/passwd",ios::in);
         if (fs.is_open()) {
             string line, user, home;
